@@ -9,7 +9,7 @@ Verified against the Claude Code hooks reference (`https://code.claude.com/docs/
 | File | Event / matcher | Level | Purpose |
 |---|---|---|---|
 | `prime_nudge.py <Event>` | `SessionStart` (`clear\|compact`), `PostToolUse` (`ExitPlanMode`) | 1 | Asks Claude to run `/prime` after a context reset or after leaving plan mode. Self-gating wording, no-op where `/prime` does not exist. |
-| `session_tips.py` | `SessionStart` (`*`) | 1 | One rotating Hungarian tip for the current level, plus a scheduled-run reminder on days 5 to 7 of the month. |
+| `session_tips.py` | `SessionStart` (`*`) | 1 | One rotating Hungarian tip for the current level. |
 | `protect_delivery.py` | `PreToolUse` (`Write\|Edit\|MultiEdit\|Bash`) | 1 | Blocks writes, edits and destructive shell commands against delivered-report folders and locked specs. |
 | `memory_backup.py` | `PreToolUse` (`Write\|Edit\|MultiEdit`) | 2 | Snapshots auto-memory files under `~/.claude/projects/<slug>/memory/` before they are overwritten, keeps 20. |
 | `hooks-block.json` | n/a | n/a | Kit-format hook block consumed by the installer's merge step. Never copied verbatim into `settings.json`. |
@@ -24,7 +24,6 @@ Runtime artefacts (not shipped, created on her machine): `~/.claude/hooks/.hook-
 - Event JSON is read from stdin, JSON (if any) is written to stdout, the decision is carried by the exit code. Stdout JSON is ASCII-escaped (`json.dumps` default) so console code pages never matter; stderr is reconfigured to UTF-8 before a Hungarian reason is written.
 - Fail-open. Any internal error appends one line `<iso-utc> <hook>: <repr>` to `<claude home>/hooks/.hook-errors.log` and the hook exits 0 with no output. Empty stdin exits 0 silently; malformed non-empty stdin exits 0 and logs one line (`prime_nudge` and `session_tips` ignore stdin content entirely, so they never log for it).
 - Claude home is `Path(os.environ.get("CLAUDE_KIT_HOME") or Path.home()) / ".claude"`. `CLAUDE_KIT_HOME` exists for tests only; it is never set on her machine.
-- `KIT_TODAY=YYYY-MM-DD` overrides today's date in `session_tips.py`. Tests only.
 - Paths are compared after normalisation to a lowercase forward-slash form: `\` and `/` accepted, `~`, `$VAR`, `${VAR}`, `%VAR%` expanded, Git Bash `/c/Users/...` rewritten to `c:/users/...`, `.` and `..` collapsed, relative paths resolved against the event `cwd` (or `project_dir`). `C:\Users\Fanni\Riportok\exports`, `/c/Users/Fanni/Riportok/exports/` and `c:/users/fanni/riportok/exports` are the same path.
 
 ## `kit-state.json`
@@ -33,18 +32,18 @@ Runtime artefacts (not shipped, created on her machine): `~/.claude/hooks/.hook-
 
 ```json
 {
-  "kit_version": "0.1.0",
+  "kit_version": "0.2.0",
   "level": 1,
   "installed_at": "2026-09-06T10:00:00",
   "updated_at": "2026-09-06T10:00:00",
   "kit_path": "C:\\Users\\fanni\\claude-kit",
   "project_dir": "C:\\Users\\fanni\\Riportok",
   "tips_seen": 0,
-  "flags": {"gmail": true, "nav": false, "schedule": true}
+  "flags": {"gmail": true, "nav": false}
 }
 ```
 
-Missing or unreadable file: level 1, `tips_seen` 0, `project_dir` = `<home>/Riportok`, no reminder. The hooks never create the file. `session_tips.py` rewrites it only when it was readable, via a temp file plus `os.replace`, preserving every other key.
+The hooks read only `level`, `tips_seen` and `project_dir`. The `flags` block is not read by any hook; in particular `flags.schedule` is no longer read, the kit has no unattended run, every report is started by hand. Missing or unreadable file: level 1, `tips_seen` 0, `project_dir` = `<home>/Riportok`. The hooks never create the file. `session_tips.py` rewrites it only when it was readable, via a temp file plus `os.replace`, preserving every other key.
 
 ## Hook details
 
@@ -60,16 +59,15 @@ Registered twice: `SessionStart` with matcher `clear|compact` (matched against t
 
 ### `session_tips.py`
 
-1. Load `kit-state.json` (level, `tips_seen`, `flags.schedule`).
+1. Load `kit-state.json` (level, `tips_seen`).
 2. Load tips: first `session_tips.json`, then `session_tips.example.json`, each looked up in `<claude home>/hooks/` and then in the hook's own directory (identical on her machine, different under test). If nothing loads, one built-in tip.
 3. Pool = tips for levels 1..N concatenated in order, so level 2 keeps rotating the level 1 tips.
 4. Tip = `pool[tips_seen % len(pool)]`, then `tips_seen += 1` (best effort).
-5. If `flags.schedule` is true and the day of month is 5, 6 or 7, append the reminder that the scheduled monthly run should have produced a file.
 
 Output:
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "Tipp (1. szint): <tip> [Emlékeztető: ...]"}}
+{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "Tipp (1. szint): <tip>"}}
 ```
 
 ### `protect_delivery.py`

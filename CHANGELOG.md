@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-06
+
+### Added
+
+- Status gate in `run_reports.py`: `--slug` refuses a report whose status is not
+  `active`, and names the skill that activates it.
+- `docs/HALADO.md`, an advanced guide holding the technical detail that came out
+  of `README.md` and `docs/HANDOVER.md`.
+
+### Changed
+
+- `README.md` and `docs/HANDOVER.md` rewritten in plain language for a non
+  technical reader; the technical detail moved to `docs/HALADO.md`.
+- `install.ps1` unregisters a leftover v0.1.0 scheduled task.
+- `run_reports.py` runs exactly one report per invocation.
+
+### Removed
+
+- Task Scheduler task `\Controller\HaviRiport` and the `-SkipSchedule` switch;
+  every run is started by hand.
+- `--all` batch mode in `run_reports.py`.
+- The day 5 scheduled run reminder in the `session_tips` hook.
+- `flags.schedule` in `kit-state.json`.
+
 ## [0.1.0] - 2026-09-06
 
 ### Added

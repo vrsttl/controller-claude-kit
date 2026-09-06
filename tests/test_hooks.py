@@ -26,10 +26,8 @@ TIPS = {
 }
 
 
-def run_hook(name, home, stdin="", args=(), env=None, devnull=False):
-    full_env = {k: v for k, v in os.environ.items() if k != "KIT_TODAY"}
-    full_env["CLAUDE_KIT_HOME"] = str(home)
-    full_env.update(env or {})
+def run_hook(name, home, stdin="", args=(), devnull=False):
+    full_env = dict(os.environ, CLAUDE_KIT_HOME=str(home))
     kwargs = {"stdin": subprocess.DEVNULL} if devnull else {"input": stdin}
     return subprocess.run(
         [sys.executable, str(HOOKS_DIR / name), *args],
@@ -50,14 +48,14 @@ def hook_context(proc):
 
 def write_state(home, **overrides):
     state = {
-        "kit_version": "0.1.0",
+        "kit_version": "0.2.0",
         "level": 1,
         "installed_at": "2026-09-06T10:00:00",
         "updated_at": "2026-09-06T10:00:00",
         "kit_path": "C:\\Users\\fanni\\claude-kit",
         "project_dir": str(home / "Riportok"),
         "tips_seen": 0,
-        "flags": {"gmail": True, "nav": False, "schedule": False},
+        "flags": {"gmail": True, "nav": False},
     }
     state.update(overrides)
     claude = home / ".claude"
@@ -198,22 +196,6 @@ def test_session_tips_corrupt_state_is_not_overwritten(home, tips):
     _, ctx = hook_context(run_hook("session_tips.py", home, "{}"))
     assert ctx.startswith("Tipp (1. szint): ")
     assert path.read_text(encoding="utf-8") == "{not json"
-
-
-@pytest.mark.parametrize(
-    ("schedule", "today", "expected"),
-    [
-        (True, "2026-09-05", True),
-        (True, "2026-09-07", True),
-        (True, "2026-09-10", False),
-        (False, "2026-09-05", False),
-    ],
-)
-def test_session_tips_schedule_reminder(home, tips, schedule, today, expected):
-    write_state(home, flags={"gmail": True, "nav": False, "schedule": schedule})
-    _, ctx = hook_context(run_hook("session_tips.py", home, "{}", env={"KIT_TODAY": today}))
-    assert ("Emlékeztető" in ctx) is expected
-    assert ("/report-run" in ctx) is expected
 
 
 def test_session_tips_example_file_shape():

@@ -6,9 +6,9 @@
 #   . (Join-Path $PSScriptRoot 'lib\kit-common.ps1')
 #
 # Two rules keep this file testable on a Mac:
-#   1. Every Windows-only call (winget, `irm | iex`, Task Scheduler, keyring)
-#      lives in a wrapper that takes -DryRun, so the tests can assert the wrapper
-#      exists without ever running it.
+#   1. Every Windows-only call (winget, `irm | iex`, keyring) lives in a
+#      wrapper that takes -DryRun, so the tests can assert the wrapper exists
+#      without ever running it.
 #   2. Everything else (settings merge, manifest compare, kit-state, path and
 #      spec.yaml helpers) is pure and works on any platform.
 #
@@ -171,13 +171,6 @@ function Test-KitCommand {
     return [bool](Get-Command -Name $Name -ErrorAction SilentlyContinue)
 }
 
-function Get-KitCommandSource {
-    param([Parameter(Mandatory = $true)][string]$Name)
-    $command = Get-Command -Name $Name -ErrorAction SilentlyContinue
-    if (-not $command) { return $null }
-    return [string]$command.Source
-}
-
 function Get-KitToolVersion {
     param([Parameter(Mandatory = $true)][string]$Name, [string[]]$Arguments = @('--version'))
     if (-not (Test-KitCommand -Name $Name)) { return $null }
@@ -267,7 +260,7 @@ function Test-KitUvTool {
 
 # ---------------------------------------------- Windows-only call wrappers ----
 # Nothing below runs during the macOS tests: every function short-circuits on
-# -DryRun before it touches winget, the network or the Task Scheduler.
+# -DryRun, or on a missing Windows cmdlet, before it touches anything.
 
 function Invoke-KitWinget {
     param(
@@ -312,77 +305,28 @@ function Install-KitUv {
     return (Test-KitCommand -Name 'uv')
 }
 
-function New-KitMonthlyTrigger {
-    param(
-        [int]$DayOfMonth = 5,
-        [string]$At = '07:00',
-        [switch]$DryRun
-    )
-    if ($DryRun) { return $null }
-    # New-ScheduledTaskTrigger has no monthly option, so the trigger is built as
-    # a CIM instance of MSFT_TaskMonthlyTrigger. DaysOfMonth is a bitmask.
-    $class = Get-CimClass -ClassName MSFT_TaskMonthlyTrigger `
-        -Namespace Root/Microsoft/Windows/TaskScheduler
-    $trigger = New-CimInstance -CimClass $class -ClientOnly
-    $trigger.DaysOfMonth = [uint32](1 -shl ($DayOfMonth - 1))
-    $trigger.MonthsOfYear = 4095
-    $parts = $At.Split(':')
-    $start = (Get-Date -Hour ([int]$parts[0]) -Minute ([int]$parts[1]) -Second 0)
-    $trigger.StartBoundary = $start.ToString('yyyy-MM-ddTHH:mm:ss')
-    $trigger.Enabled = $true
-    return $trigger
-}
-
-function Get-KitScheduledTaskInfo {
+# Kit 0.1.0 registered a monthly Task Scheduler entry that started the reports
+# unattended. The kit schedules nothing any more, so a leftover entry from such
+# an install is removed on the next run. Idempotent: returns $false when there is
+# nothing to remove, and on any machine without the ScheduledTasks module, which
+# covers macOS and Linux.
+function Remove-KitLegacyScheduledTask {
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [string]$TaskPath = '\Controller\',
         [string]$TaskName = 'HaviRiport'
     )
-    if (-not (Test-KitCommand -Name 'Get-ScheduledTask')) { return $null }
+    if (-not (Test-KitCommand -Name 'Get-ScheduledTask')) { return $false }
+    if (-not (Test-KitCommand -Name 'Unregister-ScheduledTask')) { return $false }
     $task = Get-ScheduledTask -TaskPath $TaskPath -TaskName $TaskName -ErrorAction SilentlyContinue
-    if (-not $task) { return $null }
-    $next = $null
-    try {
-        $next = (Get-ScheduledTaskInfo -InputObject $task -ErrorAction SilentlyContinue).NextRunTime
-    } catch {
-        $next = $null
+    if (-not $task) { return $false }
+    if (-not $PSCmdlet.ShouldProcess("$TaskPath$TaskName", 'régi ütemezett feladat törlése')) {
+        return $false
     }
-    return [pscustomobject]@{
-        Name        = $TaskName
-        Path        = $TaskPath
-        State       = [string]$task.State
-        NextRunTime = $next
-    }
-}
-
-function Register-KitMonthlyTask {
-    param(
-        [string]$TaskPath = '\Controller\',
-        [string]$TaskName = 'HaviRiport',
-        [Parameter(Mandatory = $true)][string]$Execute,
-        [string]$Argument = '',
-        [Parameter(Mandatory = $true)][string]$WorkingDirectory,
-        [int]$DayOfMonth = 5,
-        [string]$At = '07:00',
-        [switch]$DryRun
-    )
-    if ($DryRun) {
-        Write-Plan "Register-ScheduledTask $TaskPath$TaskName ($DayOfMonth. nap, $At)"
-        return $null
-    }
-    if (-not (Test-KitCommand -Name 'Register-ScheduledTask')) {
-        throw 'A ScheduledTasks modul nem érhető el ezen a gépen.'
-    }
-    $action = New-ScheduledTaskAction -Execute $Execute -Argument $Argument `
-        -WorkingDirectory $WorkingDirectory
-    $trigger = New-KitMonthlyTrigger -DayOfMonth $DayOfMonth -At $At
-    $userId = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-    # Interactive logon type: runs only when she is logged on, so Windows never
-    # asks for the account password during registration.
-    $principal = New-ScheduledTaskPrincipal -UserId $userId -LogonType Interactive -RunLevel Limited
-    $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable
-    return (Register-ScheduledTask -TaskPath $TaskPath -TaskName $TaskName -Action $action `
-            -Trigger $trigger -Principal $principal -Settings $settings -Force)
+    Unregister-ScheduledTask -TaskPath $TaskPath -TaskName $TaskName -Confirm:$false
+    Write-Success ('A havi automatikus futtatást megszüntettem, a riportokat mostantól ' +
+        'te indítod kézzel.')
+    return $true
 }
 
 # --------------------------------------------------------- manifest / copy ----
@@ -747,9 +691,8 @@ function Write-KitState {
             project_dir  = $ProjectDir
             tips_seen    = $tipsSeen
             flags        = [pscustomobject]([ordered]@{
-                    gmail    = [bool]$Flags['gmail']
-                    nav      = [bool]$Flags['nav']
-                    schedule = [bool]$Flags['schedule']
+                    gmail = [bool]$Flags['gmail']
+                    nav   = [bool]$Flags['nav']
                 })
         })
     if (-not $DryRun) { Write-KitJsonFile -Path $Path -Value $state }

@@ -1,4 +1,4 @@
-"""Tests for run_reports: --list and --all on a temporary Riportok tree."""
+"""Tests for run_reports: --list and --slug on a temporary Riportok tree."""
 
 from __future__ import annotations
 
@@ -72,29 +72,6 @@ def test_list_shows_specs_and_last_run(project, capsys):
     assert json.loads(capsys.readouterr().out)[0]["slug"] == "havi_arbev_kintlev"
 
 
-def test_all_continues_after_failure_and_exits_1(project, capsys):
-    bad = project / "reports" / "ugyfel_koncentracio_churn" / "spec.yaml"
-    bad.write_text(
-        bad.read_text(encoding="utf-8").replace("overwrite: same_version", "overwrite: sometimes"),
-        encoding="utf-8",
-    )
-    rc = rr.main(["--all", "--period", "2026-08", "--riportok", str(project)])
-    out = capsys.readouterr().out
-    assert rc == 1
-    havi = next(line for line in out.splitlines() if line.startswith("havi_arbev_kintlev"))
-    ugy = next(line for line in out.splitlines() if line.startswith("ugyfel_koncentracio_churn"))
-    assert (
-        "kézbesítve" in havi
-        and "2026-08" in havi
-        and "havi_arbev_kintlev_2026-08_v1.0.0.xlsx" in havi
-    )
-    assert "hiba" in ugy and "SPEC HIBA" in ugy and "delivery.overwrite" in ugy
-    assert "1 riport sikertelen, 1 sikeres" in out
-    assert (project / "exports" / "havi_arbev_kintlev_2026-08_v1.0.0.xlsx").exists()
-    assert (project / "reports" / "havi_arbev_kintlev" / "runlog.jsonl").exists()
-    assert not (project / "reports" / "ugyfel_koncentracio_churn" / "runlog.jsonl").exists()
-
-
 def test_slug_runs_one_and_reports_missing(project, capsys):
     rc = rr.main(
         [
@@ -116,15 +93,33 @@ def test_slug_runs_one_and_reports_missing(project, capsys):
     assert "nincs ilyen riport" in capsys.readouterr().out
 
 
-def test_all_skips_inactive_specs(project, capsys):
-    for slug in ("havi_arbev_kintlev", "ugyfel_koncentracio_churn"):
-        p = project / "reports" / slug / "spec.yaml"
-        p.write_text(
-            p.read_text(encoding="utf-8").replace("status: active", "status: draft"),
-            encoding="utf-8",
-        )
-    assert rr.main(["--all", "--riportok", str(project)]) == 0
-    assert "nincs aktív riport" in capsys.readouterr().out
+def test_slug_failed_build_exits_1(project, capsys):
+    bad = project / "reports" / "ugyfel_koncentracio_churn" / "spec.yaml"
+    bad.write_text(
+        bad.read_text(encoding="utf-8").replace("overwrite: same_version", "overwrite: sometimes"),
+        encoding="utf-8",
+    )
+    rc = rr.main(
+        ["--slug", "ugyfel_koncentracio_churn", "--period", "2026-08", "--riportok", str(project)]
+    )
+    out = capsys.readouterr().out
+    assert rc == 1
+    ugy = next(line for line in out.splitlines() if line.startswith("ugyfel_koncentracio_churn"))
+    assert "hiba" in ugy and "SPEC HIBA" in ugy and "delivery.overwrite" in ugy
+    assert "a riport sikertelen" in out
+    assert not (project / "reports" / "ugyfel_koncentracio_churn" / "runlog.jsonl").exists()
+
+
+def test_all_flag_is_rejected(project, capsys):
+    with pytest.raises(SystemExit) as excinfo:
+        rr.main(["--all", "--riportok", str(project)])
+    assert excinfo.value.code == 2
+    assert "--slug" in capsys.readouterr().err  # the required group, not a batch mode
+    with pytest.raises(SystemExit) as excinfo:
+        rr.main(["--slug", "havi_arbev_kintlev", "--all", "--riportok", str(project)])
+    assert excinfo.value.code == 2
+    assert "--all" in capsys.readouterr().err
+    assert not (project / "exports").exists()
 
 
 def test_dry_run_flag_passes_through(project, capsys):
@@ -144,3 +139,68 @@ def test_dry_run_flag_passes_through(project, capsys):
     assert rc == 0 and payload[0]["outcome"] == "dry_run"
     assert not (project / "exports").exists()
     assert (project / "reports" / "havi_arbev_kintlev" / "_dryrun").exists()
+
+
+def _set_status(project, slug: str, status: str) -> None:
+    spec = project / "reports" / slug / "spec.yaml"
+    spec.write_text(
+        spec.read_text(encoding="utf-8").replace("status: active", f"status: {status}", 1),
+        encoding="utf-8",
+    )
+
+
+def test_draft_slug_is_refused(project, capsys):
+    _set_status(project, "havi_arbev_kintlev", "draft")
+    rc = rr.main(
+        ["--slug", "havi_arbev_kintlev", "--period", "2026-08", "--riportok", str(project)]
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert (
+        "A(z) havi_arbev_kintlev riport állapota draft, csak active riport futtatható."
+        in captured.err
+    )
+    assert "/report-new vagy /report-edit" in captured.err
+    assert captured.out == ""
+    assert not (project / "exports").exists()
+    assert not (project / "reports" / "havi_arbev_kintlev" / "runlog.jsonl").exists()
+    # --dry-run of a draft is refused too (build.py --dry-run is the path for drafts)
+    rc = rr.main(
+        [
+            "--slug",
+            "havi_arbev_kintlev",
+            "--period",
+            "2026-08",
+            "--riportok",
+            str(project),
+            "--dry-run",
+            "--json",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert json.loads(captured.out) == {
+        "slug": "havi_arbev_kintlev",
+        "outcome": "not_active",
+        "status": "draft",
+        "exit_code": 2,
+    }
+    assert "állapota draft" in captured.err
+    assert not (project / "reports" / "havi_arbev_kintlev" / "_dryrun").exists()
+
+
+def test_retired_slug_is_refused_but_listed(project, capsys):
+    _set_status(project, "ugyfel_koncentracio_churn", "retired")
+    rc = rr.main(["--slug", "ugyfel_koncentracio_churn", "--riportok", str(project), "--json"])
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert json.loads(captured.out)["outcome"] == "not_active"
+    assert json.loads(captured.out)["status"] == "retired"
+    assert "állapota retired" in captured.err
+    assert not (project / "exports").exists()
+    assert rr.main(["--list", "--riportok", str(project), "--json"]) == 0
+    rows = json.loads(capsys.readouterr().out)
+    assert {r["slug"]: r["status"] for r in rows} == {
+        "havi_arbev_kintlev": "active",
+        "ugyfel_koncentracio_churn": "retired",
+    }

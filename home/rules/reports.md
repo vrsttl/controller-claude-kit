@@ -11,7 +11,7 @@ A `reports/<slug>/spec.yaml` írja le a riportot; a `build.py` csak végrehajtja
 | `title_hu`, `title_en` | cím a munkafüzetben és a listában | `Havi árbevétel és kintlévőség` |
 | `owner` | a felelős e-mail címe | `kontroller@ceg.hu` |
 | `version` | semver, a `--bump` emeli | `1.0.0` |
-| `status` | `draft`, `active`, `retired`; az ütemezett futás csak az `active` riportokat viszi | `active` |
+| `status` | `draft`, `active`, `retired`; a `/report-run` csak az `active` riportot futtatja | `active` |
 | `changelog[]` | `{version, date, note}` bejegyzések, a `--bump` fűzi hozzá | |
 | `locked` | `true` esetén a `protect_delivery.py` hook a specet is védi; ilyenkor csak a `/report-edit` módosíthatja | hiányzik (nem zárolt) |
 

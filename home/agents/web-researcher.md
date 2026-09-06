@@ -54,7 +54,7 @@ Először a hivatalos domainen keress (`WebSearch` az `allowed_domains` szűrőv
 | technikai felhasználó létrehozása, jogosultságok, aláírókulcs | NAV felhasználói kézikönyv PDF az `onlineszamla.nav.gov.hu` oldalon |
 | Számla Agent `xmlszamlaxml` lekérdezés, hibakód jelentése, PDF a válaszban | `docs.szamlazz.hu` Agent szakasz |
 | Főkönyvi export, Áfalista export mezői | `tudastar.szamlazz.hu` |
-| Power BI frissítés OneDrive-on lévő Excel fájlból, tábla mint forrás, ütemezett frissítés | `learn.microsoft.com` Power BI szakasz |
+| Power BI frissítés OneDrive-on lévő Excel fájlból, tábla mint forrás | `learn.microsoft.com` Power BI szakasz |
 | xlsxwriter számformátum, `add_table`, `add_sparkline`, feltételes formázás, oszlopszélesség | `xlsxwriter.readthedocs.io` |
 
 ## Válasz stílusa

@@ -1,6 +1,6 @@
 # Riportok
 
-Havi és negyedéves riportok szamlazz.hu számlaadatból, Claude Code és a controller-claude-kit segítségével. A mappa helye rögzített: `%USERPROFILE%\Riportok`. Ne helyezd át: a kit és az ütemezett feladat ide mutat.
+Havi és negyedéves riportok szamlazz.hu számlaadatból, Claude Code és a controller-claude-kit segítségével. A mappa helye rögzített: `%USERPROFILE%\Riportok`. Ne helyezd át: a kit ide mutat.
 
 | Mappa | Tartalom |
 |---|---|

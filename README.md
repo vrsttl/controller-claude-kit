@@ -1,139 +1,87 @@
-# controller-claude-kit
+# controller-claude-kit: havi riportok a szamlazz.hu számlákból
 
-Claude Code alapú riportkészítő környezet kontrollereknek: szamlazz.hu számlaadatból havi Excel és Power BI riportok, Windows 11 laptopon, egy telepítővel.
+## Mi ez
 
-## Mit ad a kit
+Minden hónapban Excel riportokat kell csinálnod a szamlazz.hu-ban kiállított számlákból. Ez a készlet (egy mappa szkriptekkel és beállításokkal) megtanítja a Claude Code-ot, hogy ezeket a riportokat elkészítse helyetted. A riportot egyszer leírod neki: a Claude kérdez, te válaszolsz. Utána bármelyik hónapban egyetlen paranccsal újra elkészítteted, és a kész Excelt kapod vissza, ugyanolyan formában, mint legutóbb. Semmi nem fut magától: a riportot mindig te indítod el, akkor, amikor kell.
 
-- Szinkron, amely a szamlazz.hu Számla Agent (és opcionálisan a NAV Online Számla) adatait helyi SQLite gyorsítótárba tölti, mindig csak az új számlákat kérve.
-- Riportok leírás alapján (`spec.yaml`): interjúkérdésekkel, nem kódolással; determinisztikus Python építi az Excel fájlt egy képernyős vezetői összefoglalóval, névvel ellátott táblákkal és Power BI CSV-kkel.
-- Tizenhat ellenőrzés minden futásnál (tételösszeg, ÁFA-bontás, számlalánc, belső egyeztetés); ami blokkolót bukik, azt a kit nem szállítja le.
-- Ütemezett havi futás a Windows Feladatütemezőből, Claude nélkül, a hónap 5-én.
-- Három tanulási szint (Napi használat, Kontroll, Automatizálás), Gmail-piszkozatok két fiókkal, védőhookok a leszállított fájlok körül.
+## Mire lesz szükséged
 
-## Előfeltételek
+- A szamlazz.hu Számla Agent kulcsod. Ez egy hosszú betű- és számsor; ezzel tudja a készlet letölteni a számláidat a szamlazz.hu-ból. A szamlazz.hu-ban a Beállítások, azon belül a Számla Agent menüpontban találod. Legyen kéznél, a telepítő kérni fogja.
+- Egy Windows 11 laptop, amire telepíthetsz programokat.
+- Claude Pro vagy Max előfizetés, és ezen a laptopon már beléptél a Claude Code-ba. Ha már használtad, ez megvan.
+- Ha akarod: egy OneDrive mappa a kész Excel fájloknak. Ha nincs, a készlet a saját mappájába teszi őket.
 
-| Mi | Miért |
-|---|---|
-| Windows 11, rendszergazdai jog (vagy a `-NoAdmin` kapcsoló) | a telepítő winget-tel rakja fel a Pythont, a Node-ot és a Gitet |
-| Claude Pro vagy Max előfizetés | a Claude Code bejelentkezéshez |
-| szamlazz.hu fiók és Számla Agent kulcs | Beállítások, Számla Agent; a kulcs 42 karakter, minden csomagban elérhető |
-| Google Workspace vagy Gmail postafiók, fiókonként egy Google Cloud OAuth-ügyfél | a Gmail MCP-hez (lásd lent) |
-| OneDrive vagy helyi mappa a kész riportoknak | ide szállít a `/report-run` |
-| opcionális: NAV Online Számla technikai felhasználó | 2. szint, a NAV-forráshoz |
+Gmail és NAV kezdetben nem kell. A Gmail később arra jó, hogy a Claude levélpiszkozatot írjon a riport mellé. A NAV Online Számla később arra jó, hogy a számlákat a NAV adataival is össze tudd vetni. Mindkettő beállítását a `docs/HALADO.md` írja le.
 
 ## Telepítés
 
-1. Klónozás vagy a zip kicsomagolása ide: `%USERPROFILE%\claude-kit`
+Nyiss egy PowerShell ablakot (a Start menüben írd be: PowerShell, és nyomj Entert), írd be, hogy `claude`, és amikor a Claude jelentkezik, másold be neki ezt a szöveget egyben. A Claude letölti a készletet, megmutatja, mit fog telepíteni, majd egy külön ablakban elindítja a telepítőt. Közben többször rákérdez, futtathat-e egy-egy parancsot: mondj igent.
 
 ```
-git clone https://github.com/vrsttl/controller-claude-kit.git %USERPROFILE%\claude-kit
+Segíts feltelepíteni egy Claude Code készletet. Ezeket csináld, sorban:
+1. Nézd meg, van-e Git a gépen. Ha nincs, telepítsd fel winget-tel.
+2. Töltsd le (klónozd) a https://github.com/vrsttl/controller-claude-kit.git tárolót a felhasználói mappámba (ahol a Dokumentumok és a Letöltések mappa is van), claude-kit néven. Ha már ott van, hagyd békén.
+3. A claude-kit mappában futtasd az install.ps1 szkriptet ezekkel: -WhatIf -SkipGmail -SkipNav. Ez csak megmutatja a tervet, nem változtat semmit. Foglald össze magyarul, mit fog csinálni.
+4. Utána indítsd el az install.bat fájlt a -SkipGmail -SkipNav paraméterekkel egy külön ablakban, Start-Process-szel, mert a telepítő kérdéseket tesz fel, és azokra én válaszolok abban az ablakban.
+5. Állj meg, és várd meg, amíg szólok, hogy a telepítő ablakában megjelent a "Kész" felirat.
+6. Ezután futtasd le a claude-kit mappából a doctor.ps1 szkriptet, és magyarázd el magyarul, sorról sorra, mit ír ki.
+A Számla Agent kulcsot soha ne kérd tőlem itt a chatben. Azt csak a telepítő ablakába írom be.
 ```
 
-2. Próba előbb, változtatás nélkül (PowerShell a mappában):
+A telepítő ablaka egyetlen dolgot kérdez: megadod-e most a szamlazz.hu Agent kulcsot. Írj be egy i betűt, nyomj Entert, aztán illeszd be a kulcsot, és megint Enter. A kulcs beírás közben nem látszik a képernyőn, ez így van rendjén. Mást nem kérdez. Közben feltelepít néhány programot (Git, Python, Node), és a Windows rákérdezhet, hogy engedélyezed-e: engedélyezd. Az egész nagyjából negyedóra, a net sebességétől függően.
+
+Akkor sikerült, ha az ellenőrző (`doctor.ps1`) listájában szinte minden sor elején OK áll. A Gmail és a NAV sorok most még nem OK, ez rendben van, hiszen kihagytuk őket. Ha máshol is felkiáltójel vagy X van, másold ki az egészet, és küldd el nekem.
+
+## Az első riport
+
+Előbb egyszer le kell tölteni az idei számlákat. Nyiss egy új PowerShell ablakot (a telepítés után mindenképp újat), és másold be ezt a két sort; az SZLA helyére a saját számlaszámaid elejét írd (ha a számlaszám például SZLA-2026-14, akkor SZLA). Pár perc alatt kiírja, hány számlát töltött le.
 
 ```
-cd %USERPROFILE%\claude-kit
-powershell -ExecutionPolicy Bypass -File .\install.ps1 -WhatIf
-```
-
-3. Dupla kattintás az `install.bat` fájlra. A telepítő sorban: winget, Claude Code, Git, Python 3.12, Node LTS, uv, keyring; a `home\` mappa másolása a `%USERPROFILE%\.claude\` alá; a `%USERPROFILE%\Riportok` mappa létrehozása; MCP-k regisztrálása; a Gmail MCP építése; titkok bekérése; ütemezett feladat; végül `doctor.ps1`.
-
-4. Amit kérdez: a Számla Agent kulcs (láthatatlanul), a Gmail-fiókok OAuth-fájlja (fiókonként egy böngészős belépés), a NAV négy adata (csak ha nincs `-SkipNav`), és jóváhagyás az ütemezett feladathoz (kihagyás: `-SkipSchedule`).
-
-Kapcsolók: `-Update` (újratelepítés a meglévő beállítások megtartásával), `-NoAdmin`, `-SkipGmail`, `-SkipNav`, `-SkipSchedule`, `-WhatIf`, `-Level N`.
-
-## Első futtatás
-
-1. Új PowerShell ablak (a PATH csak új ablakban frissül), majd `claude`, és bejelentkezés a böngészőben az előfizetéses fiókkal.
-2. `cd %USERPROFILE%\Riportok`, majd `claude`, majd `/prime`: a projekt állapotát mutatja.
-3. Első szinkron egyetlen előtagra, a saját számlaszám-előtaggal (`SZLA` helyett a tiéd):
-
-```
+cd ~/Riportok
 uv run scripts/szamlazz_sync.py pull --agent-only --prefix SZLA --year 2026
 ```
 
-4. `uv run scripts/szamlazz_sync.py status`: számlák előtag és év szerint, hiányok.
-5. `/report-new`: az első riport interjúja, próbafuttatással.
+Ez egyszer letölti az idei számlákat; később már csak az újakat kéri le. Ha többféle előtaggal számlázol, futtasd le mindegyikre.
 
-Teljes évi felsorolás előtt olvasd el a GYIK díjra vonatkozó pontját.
+Ezután ugyanabban az ablakban írd be, hogy `claude`, majd a Claude-nak azt, hogy `/report-new`. A Claude nagyjából hét dolgot kérdez meg: miről szóljon a riport, melyik hónapról, mely vevőkről, milyen számok kelljenek bele, mikor szóljon figyelmeztetés (például mekkora kintlévőség felett), és hová kerüljön a kész Excel. Minden kérdéshez ajánl egy választ, azt is elfogadhatod. A végén elkészíti a riport próbaváltozatát az előző hónapra, és megmutatja. Ha jó, mondj igent. Ettől kezdve a riport megvan, és bármikor újra lefuttathatod.
 
-## Gmail OAuth-ügyfél
+## Minden hónapban
 
-Fiókonként egyszer, a Google Cloud Console-ban (`console.cloud.google.com`), az adott fiókkal belépve:
-
-1. Projekt létrehozása (vagy meglévő kiválasztása).
-2. API-k és szolgáltatások, Könyvtár: a Gmail API engedélyezése.
-3. OAuth-hozzájárulási képernyő: Workspace postafióknál Belső (Internal) típus; személyes Gmailnél Külső (External), és a képernyő KÖZZÉTÉTELE éles állapotba (Publish app). Ha Tesztelés állapotban marad, a token 7 nap után lejár.
-4. Hitelesítő adatok, Hitelesítő adatok létrehozása, OAuth-ügyfélazonosító, típus: Asztali alkalmazás (Desktop app).
-5. A JSON letöltése (például `oauth-ceges.json`) biztonságos helyre.
-6. A fiók hozzáadása a Gmail MCP-hez (a telepítő is ezt futtatja, később kézzel is mehet):
+1. Nyisd meg a Claude Code-ot a Riportok mappában. PowerShell ablakban ez a két sor; a második után a Claude jelentkezik.
 
 ```
-node "%USERPROFILE%\Gmail-MCP-Server\dist\index.js" auth --keys "%USERPROFILE%\oauth-ceges.json"
+cd ~/Riportok
+claude
 ```
 
-A böngésző belépést és hozzájárulást kér; a token a `%USERPROFILE%\.gmail-mcp\accounts\<email>\` mappába kerül. A `GMAIL_CREDENTIALS_PATH` környezeti változót ne állítsd be. Az MCP neve a Claude Code-ban: `gmail`.
+2. Írd be: `/report-run` és utána a riport neve (a nevet a `/report-list` mutatja). A Claude lekéri az új számlákat, elkészíti a riportot, ellenőrzi a számokat, és a kész fájlt a megadott mappába teszi.
+3. Nyisd meg az Excelt, amit visszaad. A Claude általában meg is nyitja neked.
 
-## NAV technikai felhasználó (2. szint, opcionális)
+Ha közben változott valami (új vevő, más figyelmeztetési határ), írd be a `/report-edit` parancsot és a riport nevét: ez csak arról kérdez, ami változott.
 
-1. A cég Online Számla elsődleges felhasználója (Ügyfélkapu+ belépéssel) az `onlineszamla.nav.gov.hu` felületen technikai felhasználót hoz létre "számlák lekérdezése" joggal, és aláírókulcsot generál. Kell: felhasználónév, jelszó, aláírókulcs, a cég adószámának első 8 számjegye.
-2. `cd %USERPROFILE%\claude-kit`, majd `powershell -ExecutionPolicy Bypass -File .\install.ps1 -Update` (a `-SkipNav` nélkül).
-3. A négy titok tárolása a `%USERPROFILE%\Riportok` mappából:
+## Ha valami nem megy
 
-```
-uv run scripts/get_secret.py set nav.gov.hu tech-login
-uv run scripts/get_secret.py set nav.gov.hu tech-password
-uv run scripts/get_secret.py set nav.gov.hu signing-key
-uv run scripts/get_secret.py set nav.gov.hu tax-number
-```
-
-4. `uv run scripts/get_secret.py check`, majd `uv run scripts/szamlazz_sync.py pull --period 2026-08` (az előző hónapra).
-
-## Havi rutin
-
-1. A hónap 5-én 07:00-kor a `\Controller\HaviRiport` feladat lefuttatja az aktív riportokat az előző hónapra. Kézzel: `/report-run --all`.
-2. szamlazz.hu, Listák: Főkönyvi adatexport (CSV) és Áfalista (XLSX) az előző hónapra; a fájlok a `%USERPROFILE%\Riportok\data\drops\` mappába.
-3. Claude Code-ban vagy a parancssorból: `import-csv`, `import-afalista`, majd `uv run scripts/szamlazz_sync.py reconcile --period 2026-08`. Kilépési kód 0: rendben.
-4. A kész fájl megnyitása a leszállítási mappából; ha valami hiányzik vagy változtatni kell: `/report-edit <slug>`, majd `/report-run <slug>`.
-5. `/draft-email`: a kísérőlevél piszkozata a címzetteknek; a küldés kézzel.
-
-## Frissítés
+Először futtasd le az ellenőrzőt. PowerShell ablakban ez az egy sor; egy listát ír ki, minden sor elején OK, felkiáltójel vagy X, és a hibás sorok alatt egy tanács.
 
 ```
-cd %USERPROFILE%\claude-kit
-powershell -ExecutionPolicy Bypass -File .\update.ps1
+powershell -ExecutionPolicy Bypass -File "$HOME/claude-kit/doctor.ps1"
 ```
 
-`git pull`, majd `install.ps1 -Update`: a `home\` és a `scripts\` fájlok frissülnek; a saját riportok (`reports\`), az adat és a titkok maradnak. Kézzel módosított kit-fájlról biztonsági másolat készül a `%USERPROFILE%\.claude\.kit-backups\` alá.
+Jelöld ki, amit kiírt, másold ki, és küldd el nekem egy-két mondattal: mit csináltál, mi történt.
 
-## Ellenőrzés
+Három gyakori eset:
 
-```
-cd %USERPROFILE%\claude-kit
-powershell -ExecutionPolicy Bypass -File .\doctor.ps1
-```
+- Nyitva volt az Excel, és a kész fájl `.pending` végződéssel jött létre a riport mellett. Zárd be az Excelt, és futtasd újra a riportot, vagy nevezd át a fájlt a rendes névre.
+- A Claude megkérdezi, futtathat-e egy parancsot. A készlet saját szkriptjeire (a Riportok mappában lévőkre) mondj igent. Ha nem érted, mit kér, mondj nemet, attól nem romlik el semmi.
+- A Claude azt írja, hiányzik az Agent kulcs. Ismételd meg a Telepítés lépést ugyanazzal a szöveggel: a telepítő a kész lépéseket átugorja, és csak a kulcsot kéri.
 
-Táblázat `[OK]`, `[!]`, `[X]` jelöléssel: Claude Code, Python, uv, Node, Git verziók; MCP-k a szinthez; az öt titok; hookok a `settings.json`-ban; adatbázis és utolsó szinkron; leszállítási mappák írhatók-e; ütemezett feladat; Gmail-fiókok és a token kora; szint. Minden hibás sor alatt egy "mit tegyél" sor.
+## Mit nem csinál
 
-## GYIK
+- Nem küld e-mailt magától. Ha egyszer beállítod a Gmailt, akkor is csak piszkozatot ír; elküldeni neked kell.
+- Nem változtat semmit a szamlazz.hu-ban, csak olvassa a számlákat.
+- Nem tölt fel semmit sehová. A kész fájl a laptopodon marad, vagy abban az OneDrive mappában, amit te választottál.
+- Nem fut magától. Csak akkor csinál bármit, amikor te elindítod.
 
-| Kérdés | Válasz |
-|---|---|
-| Mit jelent az engedélykérés? | Claude Code megkérdezi, futtathat-e egy parancsot vagy írhat-e egy fájlt. A kérdés mutatja, pontosan mit. A kit saját szkriptjei (`uv run scripts/...`) rendben vannak; ha nem érted, mondj nemet, nem romlik el semmi. |
-| Nyitva volt az Excel, és `.pending.xlsx` lett a fájl | A célfájl zárolt volt, ezért a riport `<név>.pending.xlsx` néven került a mappába. Zárd be az Excelt, és futtasd újra a `/report-run` parancsot, vagy nevezd át a fájlt a végleges névre. |
-| Megjelent egy `_rejected` mappa | Egy blokkoló ellenőrzés bukott (V01, V04, V05, V11, V15, V16), a riport nem lett leszállítva. A bukott fájl `Futtatási napló` lapja mutatja az okot; a szinkron vagy a spec javítása után újrafuttatás. |
-| A Gmail MCP lejárt tokent jelez | Az OAuth-képernyő Tesztelés állapotban maradt: tedd közzé éles állapotba (Workspace-nél Belső típus), majd futtasd újra az `auth --keys` parancsot arra a fiókra. |
-| Telepítés után az `uv` nem található | A PATH csak új ablakban frissül. Zárd be a PowerShellt vagy a terminált, és nyisd meg újra. |
-| Fizetni kell az Agent-lekérdezésekért? | A kit feltevése: nem, a díj a kiállított bizonylat után jár. Ezt írásban erősíttesd meg a szamlazz.hu ügyfélszolgálatával, mielőtt egy teljes évet felsorolsz (a levélszöveg a `docs\HANDOVER.md` fájlban). Az inkrementális szinkron havonta csak az új számlákat kéri le. |
-| Bekerülnek a díjbekérők? | Alapból nem (`filters.exclude_proforma: true`, a `doc_types` listában nincs `proforma`). Ha kellenek: az előtagjukat a szinkron is sorolja fel (`--prefix` ismételve), a specben `exclude_proforma: false` és `proforma` a `doc_types` listában, és egyszer ellenőrizni kell, hogy az Agent-lekérdezés visszaadja-e őket. |
-| Hol vannak a jelszavak és kulcsok? | A Windows hitelesítőtárban (Credential Manager), a `keyring` csomagon keresztül. Listázás értékek nélkül: `uv run scripts/get_secret.py check`. Fájlban, chatben, naplóban nincsenek. |
-| Hogyan változtatom meg a leszállítási mappát? | `/report-edit <slug>`, a kimenet és leszállítás kör; vagy a spec `delivery.folder` kulcsa, utána `--bump patch` és próbafuttatás. OneDrive-mappánál a teljes útvonalat add meg. |
-| Hogyan távolítom el a kitet? | Ütemezett feladat: `schtasks /Delete /TN "\Controller\HaviRiport" /F`. MCP-k: `powershell -ExecutionPolicy Bypass -File .\mcp\register-mcps.ps1 -Remove` a kit mappájából (vagy egyenként `claude mcp remove gmail`, `excel` és a magasabb szintűek). A `%USERPROFILE%\.claude\` alól a kit fájljai (a `manifest.json` sorolja), a `%USERPROFILE%\claude-kit` és a `%USERPROFILE%\Gmail-MCP-Server` mappa törölhető. A `%USERPROFILE%\Riportok` mappa a tiéd, tartsd meg. A titkokat a hitelesítőtárból kézzel lehet törölni. |
+## Haladóknak
 
-## Mit NEM csinál a kit
-
-- Nem küld e-mailt magától: csak piszkozatot készít, a küldés a tiéd.
-- Nem ír a szamlazz.hu-ba: csak olvas (számla lekérdezése, PDF).
-- Nem tölt fel sehová: a kimenet a helyi `exports\` mappa vagy az általad választott OneDrive-mappa.
-- Nem szerkeszt kész riportot: minden változás a specen keresztül, újrafuttatással.
-- Az ütemezett futás nem használ Claude-ot, és nem kérdez: ha bármi hiányzik, a riport nem szállít, és a napló mondja meg, miért.
+Minden, ami innen kimaradt (Gmail és NAV beállítása, a telepítő kapcsolói, a letöltő parancsok, a készlet frissítése és eltávolítása, a szamlazz.hu díjkérdés), a `docs/HALADO.md` fájlban van.

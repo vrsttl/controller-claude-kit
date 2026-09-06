@@ -11,7 +11,7 @@ This repo builds a packaged, one-script-installable Claude Code setup for a Hung
 | Path | Contents |
 |---|---|
 | `install.bat` | Double-click entry point: `powershell -ExecutionPolicy Bypass -File install.ps1` |
-| `install.ps1` | Idempotent installer. Flags: `-Update -NoAdmin -SkipGmail -SkipNav -SkipSchedule -WhatIf -Level N` |
+| `install.ps1` | Idempotent installer. Flags: `-Update -NoAdmin -SkipGmail -SkipNav -WhatIf -Level N` |
 | `update.ps1` | `git pull` then `.\install.ps1 -Update` |
 | `doctor.ps1` | Health check, always exits 0, prints an `[OK]`/`[!]`/`[X]` table |
 | `README.md` | Hungarian: install, first run, Gmail OAuth client how-to, FAQ |

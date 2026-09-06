@@ -1,6 +1,6 @@
 # 3. szint: Automatizálás
 
-A felhasználó a kit belső részeit is használja: olvassa az ügynökök leírását, óvatosan szerkeszt hookot, kezeli az ütemezett futást, Power BI-t köt a riportokra, és parancssorból is kérdez. Ezen a szinten elérhető a `powerbi-modeling` és az `ms365` MCP, valamint a `web-researcher` ügynök. Az 1. és a 2. szint szabályai érvényben maradnak: leszállítani továbbra is csak a `/report-run` tud, a leszállítási mappába kézzel senki nem ír.
+A felhasználó a kit belső részeit is használja: olvassa az ügynökök leírását, óvatosan szerkeszt hookot, Power BI-t köt a riportokra, és parancssorból is kérdez. Ezen a szinten elérhető a `powerbi-modeling` és az `ms365` MCP, valamint a `web-researcher` ügynök. Az 1. és a 2. szint szabályai érvényben maradnak: leszállítani továbbra is csak a `/report-run` tud, a leszállítási mappába kézzel senki nem ír.
 
 ## Ügynökök
 
@@ -29,23 +29,6 @@ A hookok a `~/.claude/hooks/*.py` fájlok. Csak a Python szabványkönyvtárat h
 5. Ha elromlott: a `.bak` visszamásolása, vagy `update.ps1`, amely a kit változatát visszaírja. A `.hook-errors.log` mondja meg, mi történt.
 
 A `settings.json` hook-bejegyzéseit ne kézzel írd: az `install.ps1 -Update` (az `update.ps1` hívja) fésüli össze a szint szerint, és csak a kit saját bejegyzéseit cseréli; ezért kér a `/level-up` a végén `update.ps1` futtatást.
-
-## Feladatütemező
-
-A telepítő létrehozta a `\Controller\HaviRiport` feladatot: minden hónap 5-én 07:00-kor lefut
-
-```
-uv run "%USERPROFILE%\Riportok\scripts\run_reports.py" --all --period previous_month
-```
-
-| Cél | Parancs |
-|---|---|
-| állapot és következő futás | `schtasks /Query /TN "\Controller\HaviRiport" /V /FO LIST` |
-| futtatás most (próbához) | `schtasks /Run /TN "\Controller\HaviRiport"` |
-| a futás eredménye | `uv run scripts/run_reports.py --list`, vagy a `reports/<slug>/runlog.jsonl` utolsó sora |
-| kikapcsolás és visszakapcsolás | `schtasks /Change /TN "\Controller\HaviRiport" /DISABLE`, majd `/ENABLE` |
-
-A futás nem használ Claude-ot: tiszta Python a specek szerint, a `previous_month` időszakra. Ha a laptop 5-én reggel ki volt kapcsolva, a futás elmaradhatott: a `session_tips.py` 5. és 7. között emlékeztet, a `/report-run --all` pótolja.
 
 ## Power BI Desktop
 

@@ -44,7 +44,7 @@ uv --version
 python --version
 ```
 
-Olvasd be a `~/.claude/kit-state.json` fájlt: `level`, `kit_version`, `kit_path`, `project_dir`, `flags.gmail`, `flags.nav`, `flags.schedule`. A szint dönti el, mely szabályfájlok és MCP-k aktívak.
+Olvasd be a `~/.claude/kit-state.json` fájlt: `level`, `kit_version`, `kit_path`, `project_dir`, `flags.gmail`, `flags.nav`. A szint dönti el, mely szabályfájlok és MCP-k aktívak.
 
 ## 6. Kulcstények
 

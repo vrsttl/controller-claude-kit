@@ -20,7 +20,6 @@ param(
     [switch]$NoAdmin,
     [switch]$SkipGmail,
     [switch]$SkipNav,
-    [switch]$SkipSchedule,
     [int]$Level = 0,
     [string]$KitPath = $PSScriptRoot
 )
@@ -73,7 +72,7 @@ try {
     Write-Detail "projekt: $projectDir"
 
     # --- 1. winget --------------------------------------------------------
-    Set-KitStep '1/15 winget (Windows csomagkezelő)'
+    Set-KitStep '1/14 winget (Windows csomagkezelő)'
     $hasWinget = Test-KitCommand -Name 'winget'
     if ($hasWinget) {
         Write-Success 'már telepítve'
@@ -86,7 +85,7 @@ try {
     }
 
     # --- 2. Claude Code ---------------------------------------------------
-    Set-KitStep '2/15 Claude Code'
+    Set-KitStep '2/14 Claude Code'
     if (Test-KitCommand -Name 'claude') {
         Write-Success ('már telepítve: ' + (Get-KitToolVersion -Name 'claude'))
     } elseif (Confirm-KitAction -Target 'Claude Code' -Action 'telepítés (irm claude.ai/install.ps1)') {
@@ -100,7 +99,7 @@ try {
     }
 
     # --- 3. Git for Windows -----------------------------------------------
-    Set-KitStep '3/15 Git for Windows'
+    Set-KitStep '3/14 Git for Windows'
     if (Test-KitCommand -Name 'git') {
         Write-Success ('már telepítve: ' + (Get-KitToolVersion -Name 'git'))
     } elseif ($NoAdmin) {
@@ -112,7 +111,7 @@ try {
     }
 
     # --- 4. Python 3.12 ---------------------------------------------------
-    Set-KitStep '4/15 Python 3.12'
+    Set-KitStep '4/14 Python 3.12'
     $python = Get-KitPythonInfo
     if ($python.IsOk) {
         Write-Success ('már telepítve: ' + $python.Version + '  (' + $python.Source + ')')
@@ -148,7 +147,7 @@ try {
     }
 
     # --- 5. Node LTS ------------------------------------------------------
-    Set-KitStep '5/15 Node.js LTS'
+    Set-KitStep '5/14 Node.js LTS'
     if ($SkipGmail) {
         Write-Warn '-SkipGmail miatt kihagyva (a Gmail MCP-hez kellene).'
     } elseif (Test-KitCommand -Name 'node') {
@@ -161,7 +160,7 @@ try {
     }
 
     # --- 6. uv ------------------------------------------------------------
-    Set-KitStep '6/15 uv (Python futtató)'
+    Set-KitStep '6/14 uv (Python futtató)'
     if (Test-KitCommand -Name 'uv') {
         Write-Success ('már telepítve: ' + (Get-KitToolVersion -Name 'uv'))
     } elseif (Confirm-KitAction -Target 'uv' -Action 'telepítés (irm astral.sh/uv/install.ps1)') {
@@ -169,7 +168,7 @@ try {
     }
 
     # --- 7. keyring -------------------------------------------------------
-    Set-KitStep '7/15 keyring eszköz'
+    Set-KitStep '7/14 keyring eszköz'
     if (Test-KitUvTool -Name 'keyring') {
         Write-Success 'már telepítve'
     } elseif (Confirm-KitAction -Target 'uv tool install keyring' -Action 'telepítés') {
@@ -182,7 +181,7 @@ try {
     }
 
     # --- 8. home mappa és hookok -------------------------------------------
-    Set-KitStep '8/15 Claude mappa feltöltése és hookok'
+    Set-KitStep '8/14 Claude mappa feltöltése és hookok'
     $manifest = Get-KitManifest -KitPath $KitPath
     if (-not $manifest) {
         throw ("Hiányzik a manifest.json a készlet gyökerében ($KitPath). " +
@@ -207,7 +206,7 @@ try {
     }
 
     # --- 9. Riportok mappa -------------------------------------------------
-    Set-KitStep '9/15 Riportok mappa'
+    Set-KitStep '9/14 Riportok mappa'
     if (Confirm-KitAction -Target $projectDir -Action 'projekt mappa létrehozása') {
         foreach ($sub in @('', 'data', 'data/drops', 'exports', 'reports', 'scripts')) {
             $target = if ($sub) { Join-KitPath -Path $projectDir -ChildPath $sub } else { $projectDir }
@@ -261,7 +260,7 @@ try {
     }
 
     # --- 10. MCP szerverek -------------------------------------------------
-    Set-KitStep '10/15 MCP szerverek'
+    Set-KitStep '10/14 MCP szerverek'
     $registerScript = Join-KitPath -Path $KitPath -ChildPath 'mcp/register-mcps.ps1'
     if (-not (Test-Path -LiteralPath $registerScript -PathType Leaf)) {
         Write-Warn "Nem találom: $registerScript"
@@ -270,7 +269,7 @@ try {
     }
 
     # --- 11. Gmail MCP -----------------------------------------------------
-    Set-KitStep '11/15 Gmail MCP'
+    Set-KitStep '11/14 Gmail MCP'
     if ($SkipGmail) {
         Write-Warn '-SkipGmail miatt kihagyva.'
     } else {
@@ -286,7 +285,7 @@ try {
     }
 
     # --- 12. Titkok --------------------------------------------------------
-    Set-KitStep '12/15 Titkok a Windows hitelesítőtárban'
+    Set-KitStep '12/14 Titkok a Windows hitelesítőtárban'
     $secretScript = Join-KitPath -Path $scriptsDir -ChildPath 'get_secret.py'
     if (-not (Test-Path -LiteralPath $secretScript -PathType Leaf)) {
         Write-Warn 'A get_secret.py még nincs a helyén, a titkok bekérését kihagyom.'
@@ -333,39 +332,17 @@ try {
         }
     }
 
-    # --- 13. Ütemezett futtatás --------------------------------------------
-    Set-KitStep '13/15 Havi ütemezett futtatás'
-    if ($SkipSchedule) {
-        Write-Warn '-SkipSchedule miatt kihagyva.'
-    } else {
-        $existingTask = Get-KitScheduledTaskInfo -TaskPath '\Controller\' -TaskName 'HaviRiport'
-        if ($existingTask) {
-            Write-Success "a feladat már létezik (állapot: $($existingTask.State)), frissítem"
-        }
-        $runner = Join-KitPath -Path $scriptsDir -ChildPath 'run_reports.py'
-        $taskArgument = "run `"$runner`" --all --period previous_month"
-        # Teljes elérési út kell: az Ütemező nem látja a felhasználói PATH-t.
-        $uvPath = Get-KitCommandSource -Name 'uv'
-        if (-not $uvPath) { $uvPath = Join-KitPath -Path $userProfile -ChildPath '.local/bin/uv.exe' }
-        if (Confirm-KitAction -Target '\Controller\HaviRiport' -Action 'ütemezett feladat létrehozása') {
-            if ($script:DryRun) {
-                Write-Plan "Register-ScheduledTask \Controller\HaviRiport (minden hónap 5-én 07:00)"
-            } else {
-                Register-KitMonthlyTask -TaskPath '\Controller\' -TaskName 'HaviRiport' `
-                    -Execute $uvPath -Argument $taskArgument -WorkingDirectory $projectDir `
-                    -DayOfMonth 5 -At '07:00' | Out-Null
-                Write-Success 'ütemezve: minden hónap 5-én 07:00'
-            }
-        }
-        Write-Detail 'Kézi próba: schtasks /Run /TN "\Controller\HaviRiport"'
-    }
+    # --- Takarítás: a 0.1.0 havi ütemezett feladata -------------------------
+    # Kit 0.1.0 registered a monthly task. The kit no longer schedules anything,
+    # so a leftover task is unregistered here. Silent no-op when there is nothing
+    # to remove, and on any machine without the ScheduledTasks module.
+    Remove-KitLegacyScheduledTask | Out-Null
 
-    # --- 14. kit-state.json ------------------------------------------------
-    Set-KitStep '14/15 kit-state.json'
+    # --- 13. kit-state.json ------------------------------------------------
+    Set-KitStep '13/14 kit-state.json'
     $flags = @{
-        gmail    = (-not $SkipGmail)
-        nav      = (-not $SkipNav)
-        schedule = (-not $SkipSchedule)
+        gmail = (-not $SkipGmail)
+        nav   = (-not $SkipNav)
     }
     if (Confirm-KitAction -Target $statePath -Action 'állapot írása') {
         Write-KitState -Path $statePath -KitVersion $kitVersion -Level $effectiveLevel `
@@ -379,8 +356,8 @@ try {
         }
     }
 
-    # --- 15. Ellenőrzés ----------------------------------------------------
-    Set-KitStep '15/15 Ellenőrzés'
+    # --- 14. Ellenőrzés ----------------------------------------------------
+    Set-KitStep '14/14 Ellenőrzés'
     $doctorScript = Join-KitPath -Path $KitPath -ChildPath 'doctor.ps1'
     if (Test-Path -LiteralPath $doctorScript -PathType Leaf) {
         & $doctorScript -KitPath $KitPath

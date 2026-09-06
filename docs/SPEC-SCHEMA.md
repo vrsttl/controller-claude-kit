@@ -39,7 +39,7 @@ is for, what its notable options mean); `--new` writes the three-line `SKELETON_
 | `status` | str | `draft` | `draft`, `active`, `retired`. `megengedett értékek: draft, active, retired` |
 | `changelog[]` | list of `{version, date, note}` | `[]` | `{version, date, note} mezők kellenek` |
 
-`run_reports.py --all` runs only `status: active` specs; `/report-run` refuses `draft` and `retired`.
+`/report-run` refuses `draft` and `retired`.
 
 ### `period`
 

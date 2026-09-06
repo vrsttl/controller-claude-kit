@@ -2,16 +2,17 @@
 # requires-python = ">=3.12"
 # dependencies = ["pyyaml>=6"]
 # ///
-"""Runner for every report under reports/<slug>/ (Task Scheduler entry point).
+"""Run one report under reports/<slug>/ by hand, or list every report.
 
-    uv run scripts/run_reports.py --all --period previous_month
-    uv run scripts/run_reports.py --slug havi_arbev_kintlev [--period 2026-08]
-    uv run scripts/run_reports.py --list
+    uv run scripts/run_reports.py --slug havi_arbev_kintlev [--period previous_month] [--dry-run]
+    uv run scripts/run_reports.py --list [--json]
     --riportok DIR overrides the project root (default: RIPORTOK_DIR or ~/Riportok)
 
-Each build runs as a subprocess (`uv run build.py ...` when uv is on PATH, else
-the current interpreter). --all continues after failures and exits 1 if any
-report failed. Only pandas-free imports here, so `--list` stays fast.
+The build runs as a subprocess (`uv run build.py ...` when uv is on PATH, else
+the current interpreter). Exit codes: 0 ok, 1 the build failed, 2 unknown slug
+or the report is not `active` (draft and retired reports are refused, also with
+`--dry-run`; a draft is dry-run via `build.py --dry-run` directly).
+Only pandas-free imports here, so `--list` stays fast.
 """
 
 from __future__ import annotations
@@ -170,15 +171,16 @@ def run_one(
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Riportok futtatása")
+    ap = argparse.ArgumentParser(
+        description="Egy riport futtatása kézzel, vagy a riportok listázása"
+    )
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--all", action="store_true", help="minden aktív riport (abc sorrendben)")
-    g.add_argument("--slug", help="egy riport")
+    g.add_argument("--slug", help="a futtatandó riport (a reports/ alatti mappa neve)")
     g.add_argument("--list", action="store_true", help="riportok táblázata")
     ap.add_argument("--period", help="időszak (pl. previous_month, 2026-08)")
     ap.add_argument("--riportok", help="Riportok mappa (tesztekhez)")
-    ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--json", action="store_true")
+    ap.add_argument("--dry-run", action="store_true", help="próbafuttatás, nem kézbesít")
+    ap.add_argument("--json", action="store_true", help="gépi kimenet")
     args = ap.parse_args(argv)
     root = riportok_root(args.riportok)
 
@@ -204,33 +206,41 @@ def main(argv: list[str] | None = None) -> int:
             )
         return 0
 
-    specs = list_specs(root)
-    if args.slug:
-        specs = [p for p in specs if p.parent.name == args.slug]
-        if not specs:
-            print(f"nincs ilyen riport: {args.slug} ({root / 'reports'})")
-            return 2
-    else:
-        specs = [p for p in specs if _read_spec_meta(p)["status"] == "active"]
-        if not specs:
-            print(f"nincs aktív riport itt: {root / 'reports'}")
-            return 0
+    specs = [p for p in list_specs(root) if p.parent.name == args.slug]
+    if not specs:
+        print(f"nincs ilyen riport: {args.slug} ({root / 'reports'})")
+        return 2
+
+    status = _read_spec_meta(specs[0])["status"]
+    if status != "active":
+        print(
+            f"A(z) {args.slug} riport állapota {status}, csak active riport futtatható. "
+            "Aktiváld a /report-new vagy /report-edit paranccsal.",
+            file=sys.stderr,
+        )
+        if args.json:
+            print(
+                json.dumps(
+                    {"slug": args.slug, "outcome": "not_active", "status": status, "exit_code": 2},
+                    ensure_ascii=False,
+                )
+            )
+        return 2
 
     extra = ["--dry-run"] if args.dry_run else []
-    results = [run_one(p, args.period, root, extra) for p in specs]
+    result = run_one(specs[0], args.period, root, extra)
     if args.json:
         print(
             json.dumps(
-                [{k: v for k, v in r.items() if k not in ("stdout", "stderr")} for r in results],
+                [{k: v for k, v in result.items() if k not in ("stdout", "stderr")}],
                 ensure_ascii=False,
             )
         )
     else:
-        for r in results:
-            r["outcome_hu"] = OUTCOME_HU.get(r["outcome"], r["outcome"])
+        result["outcome_hu"] = OUTCOME_HU.get(result["outcome"], result["outcome"])
         print(
             format_table(
-                results,
+                [result],
                 [
                     ("slug", "slug"),
                     ("period", "időszak"),
@@ -241,13 +251,8 @@ def main(argv: list[str] | None = None) -> int:
                 ],
             )
         )
-    failed = [r for r in results if r["exit_code"] != 0]
-    if not args.json:
-        if failed:
-            print(f"{len(failed)} riport sikertelen, {len(results) - len(failed)} sikeres")
-        else:
-            print(f"{len(results)} riport sikeres")
-    return 1 if failed else 0
+        print("a riport sikertelen" if result["exit_code"] != 0 else "a riport sikeres")
+    return 1 if result["exit_code"] != 0 else 0
 
 
 if __name__ == "__main__":

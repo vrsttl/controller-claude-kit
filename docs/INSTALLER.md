@@ -10,7 +10,7 @@ function names and comments are English.
 | File | Role |
 |---|---|
 | `install.bat` | Double-click entry point. Runs `powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 %*`, then `pause`. |
-| `install.ps1` | The 15 step idempotent installer. |
+| `install.ps1` | The 14 step idempotent installer. |
 | `update.ps1` | `git pull --ff-only`, then `install.ps1 -Update` with the same switches. |
 | `doctor.ps1` | Read only health check. Always exits 0. `-Json` for support. |
 | `lib/kit-common.ps1` | Dot sourced helpers shared by all of the above. |
@@ -143,10 +143,14 @@ appended, and the informational `kit` key never reaches `settings.json`.
 
 Written by `Write-KitState`. Key order is fixed:
 `kit_version, level, installed_at, updated_at, kit_path, project_dir, tips_seen,
-flags{gmail, nav, schedule}`. On a re-run `installed_at` and `tips_seen` are read
+flags{gmail, nav}`. On a re-run `installed_at` and `tips_seen` are read
 back from the existing file and preserved; `level` comes from the caller, which
 resolves it with `Resolve-KitLevel` (explicit `-Level N` wins, else the existing
 level, else 1).
+
+Kit 0.1.0 also wrote a `flags.schedule` key. `Write-KitState` rebuilds the
+`flags` object from scratch on every run, so that key disappears from the file
+the first time 0.2.0 rewrites it. Nothing reads it any more.
 
 ## Verified against live documentation (2026-09-06)
 
@@ -219,25 +223,23 @@ never set.
 Testing mode consent screens expire refresh tokens after 7 days, so `doctor.ps1`
 warns at 5 days.
 
-## Task Scheduler
+## Removed in 0.2.0: the monthly scheduled task
 
-`New-ScheduledTaskTrigger` has no monthly option, so `New-KitMonthlyTrigger`
-builds a CIM instance of `MSFT_TaskMonthlyTrigger` in
-`Root/Microsoft/Windows/TaskScheduler`. `DaysOfMonth` is a bitmask, so day 5 is
-`1 -shl 4` = 16, and `MonthsOfYear = 4095` is all twelve months.
-`Register-KitMonthlyTask` then registers `\Controller\HaviRiport` with
-`-LogonType Interactive` (runs only while she is logged on, so Windows never asks
-for her account password) and `New-ScheduledTaskSettingsSet -StartWhenAvailable`
-(catches up if the laptop was off on the 5th).
+0.1.0 registered a Task Scheduler entry, `\Controller\HaviRiport`, that ran the
+reports unattended on the 5th of every month. There is no unattended automation
+in the kit any more: a monthly run is something she starts by hand, so the
+`-SkipSchedule` switch, the registration step and the `doctor.ps1` row are all
+gone.
 
-`-Execute` gets the **absolute** path of `uv.exe` resolved at install time,
-because the Task Scheduler does not see the per-user PATH.
-
-Manual trigger, printed by the installer:
-
-```
-schtasks /Run /TN "\Controller\HaviRiport"
-```
+Machines that already took 0.1.0 still have the task, and it would keep firing
+against a runner that no longer accepts its arguments. `install.ps1` therefore
+calls `Remove-KitLegacyScheduledTask` on every run. The helper is idempotent and
+silent: it returns `$false` without printing anything when `Get-ScheduledTask` or
+`Unregister-ScheduledTask` is unavailable (so it is a no-op on macOS and Linux)
+or when the task is not there. Only when it actually removes something does it
+print one Hungarian line saying the automatic monthly run is gone and reports are
+started by hand. The unregister sits behind `SupportsShouldProcess`, so
+`install.ps1 -WhatIf` never touches it.
 
 ## Python on PATH and the Microsoft Store stub
 
@@ -254,9 +256,8 @@ Everything Windows only sits behind a wrapper with a `-DryRun` switch, and
 `tests/test_kit_common.ps1` asserts both that the wrapper exists and that
 `-DryRun` returns without calling anything:
 
-`Invoke-KitWinget`, `Invoke-KitWebInstall`, `Install-KitUv`,
-`New-KitMonthlyTrigger`, `Register-KitMonthlyTask`, plus the mutating helpers
-`Copy-KitSection`, `Copy-KitHome`, `Copy-KitFile`, `Backup-KitFile`,
+`Invoke-KitWinget`, `Invoke-KitWebInstall`, `Install-KitUv`, plus the mutating
+helpers `Copy-KitSection`, `Copy-KitHome`, `Copy-KitFile`, `Backup-KitFile`,
 `New-KitDirectory`, `Write-KitSettings` and `Write-KitState`.
 
 `install.ps1` itself uses `[CmdletBinding(SupportsShouldProcess)]` and wraps every
@@ -268,9 +269,6 @@ drives the `-DryRun` switches and the `[terv]` plan lines.
 
 - `winget install` for `Git.Git`, `Python.Python.3.12`, `OpenJS.NodeJS.LTS`.
 - `irm https://claude.ai/install.ps1 | iex` and the uv installer.
-- `MSFT_TaskMonthlyTrigger` construction and `Register-ScheduledTask`, including
-  whether `-LogonType Interactive` really avoids the password prompt on her
-  account type.
 - `keyring` writing into Windows Credential Manager, and the interactive
   `getpass` prompt inside `uv run` under a PowerShell host.
 - Whether `%USERPROFILE%\.local\bin` is where the Claude Code and uv installers

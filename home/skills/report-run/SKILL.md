@@ -1,12 +1,12 @@
 ---
 name: report-run
 description: |
-  Lefuttat egy aktív riportot egy időszakra: szinkron a szamlazz.hu adatokból, build a spec szerint, ellenőrzés, leszállítás a megadott mappába, majd megnyitja a kész xlsx-et és felajánlja a kísérőlevelet. Akkor indítsd, ha a felhasználó riportot futtatna, például "futtasd a havi riportot", "/report-run havi_arbev_kintlev", "csináld meg az augusztusi riportot", "futtasd le az összes riportot", "csak szinkronizálj".
+  Lefuttat egy aktív riportot egy időszakra: szinkron a szamlazz.hu adatokból, build a spec szerint, ellenőrzés, leszállítás a megadott mappába, majd megnyitja a kész xlsx-et és felajánlja a kísérőlevelet. Akkor indítsd, ha a felhasználó riportot futtatna, például "futtasd a havi riportot", "/report-run havi_arbev_kintlev", "csináld meg az augusztusi riportot", "csak szinkronizálj".
 ---
 
 # /report-run
 
-Használat: `/report-run <slug> [--period ÉÉÉÉ-HH] [--sync-only]` vagy `/report-run --all [--period ÉÉÉÉ-HH]`. Minden parancs a `~/Riportok` mappából fut. A skill nem ír a leszállítási mappába közvetlenül: a `build.py` a `.staging/` mappába épít, és onnan mozgat; a `protect_delivery.py` hook minden más utat tilt, ezt ne kerüld meg.
+Használat: `/report-run <slug> [--period ÉÉÉÉ-HH] [--sync-only]`. Minden parancs a `~/Riportok` mappából fut. A skill nem ír a leszállítási mappába közvetlenül: a `build.py` a `.staging/` mappába épít, és onnan mozgat; a `protect_delivery.py` hook minden más utat tilt, ezt ne kerüld meg.
 
 ## 1. Paraméterek
 
@@ -77,10 +77,6 @@ Elutasított vagy függő fájlt ne javíts, ne mozgass, ne nevezz át: a hook t
 2. `AskUserQuestion`: "Írjak kísérőlevelet a riporthoz?" Opciók: "Igen, /draft-email" | "Nem".
 3. Igen esetén indítsd a `/draft-email` skill "havi riport e-mail" receptjét; add át a JSON objektumot, az előnézeti sorokat, a `delivered_path` értéket és a `title_hu` címet.
 4. Záró sor: `Leszállítva: <delivered_path> (<P>, v<verzió>)`.
-
-## `--all`
-
-`Bash`: `uv run scripts/run_reports.py --all --period previous_month` (vagy a megadott `--period`). Ugyanez fut a Feladatütemezőből havonta. Előtte a 2. lépés szinkronja egyszer, az összes előtagra. A kimenet riportonként egy sor: slug, időszak, eredmény, kód, fájl, üzenet; a végén "n riport sikeres" vagy "n riport sikertelen". Kilépési kód 1, ha bármelyik nem sikerült: azokra az 5. lépés táblázata érvényes, egyenként.
 
 ## Ha elakad
 

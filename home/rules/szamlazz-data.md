@@ -9,7 +9,7 @@
 | A lekérdezés díja feltehetően nulla (a díj a kiállított bizonylat után jár) | az első teljes évi felsorolás előtt meg kell erősíttetni a szamlazz.hu ügyfélszolgálatával, lásd lent |
 | A szinkron inkrementális: csak az új sorszámokat kéri le; a nyers válasz a `raw_documents` táblába kerül, a többi tábla ebből épül újra | bármikor újrafuttatható; a havi kérésszám a havi számlaszám plusz 3 |
 | NAV Online Számla 3.0: a cég a saját kimenő számláit listázhatja legfeljebb 35 napos ablakonként (`queryInvoiceDigest`), tétel és fizetettség nélkül; a teljes XML a `queryInvoiceData` hívással jön | technikai felhasználó kell hozzá (2. szint); a NAV a lista, az Agent a részlet |
-| A kézi exportok (Listák: Főkönyvi adatexport CSV, Áfalista XLSX) nem ütemezhetők | csak havi egyeztetési kontroll, soha nem elsődleges forrás |
+| A kézi exportok (Listák: Főkönyvi adatexport CSV, Áfalista XLSX) csak kézzel indíthatók | csak havi egyeztetési kontroll, soha nem elsődleges forrás |
 | Storno és helyesbítő bizonylat előjeles összeggel érkezik, és egy lánchoz tartozik (`v_chain` nézet, `chain_root`) | a riport a lánc eredő értékét mutatja; hiányzó eredeti számla V11 bukás |
 | HUF-ban nincs tizedes | sehol nincs osztás 100-zal, nincs kerekítés; formátum `#,##0" Ft"` vagy `#,##0," e Ft"` |
 | ÁFA-kulcsok: `27`, `5`, `0`, `AAM`, `TAM`, `EU`, `EUK` | az `invoice_vat` tábla kulcsonként bontja; a spec `filters.vat_rates` szűrhet |

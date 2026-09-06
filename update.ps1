@@ -15,7 +15,6 @@ param(
     [switch]$NoAdmin,
     [switch]$SkipGmail,
     [switch]$SkipNav,
-    [switch]$SkipSchedule,
     [int]$Level = 0,
     [string]$KitPath = $PSScriptRoot
 )
@@ -50,5 +49,5 @@ if (-not (Test-Path -LiteralPath $installScript -PathType Leaf)) {
 }
 
 & $installScript -Update -KitPath $KitPath -NoAdmin:$NoAdmin -SkipGmail:$SkipGmail `
-    -SkipNav:$SkipNav -SkipSchedule:$SkipSchedule -Level $Level -WhatIf:$dryRun
+    -SkipNav:$SkipNav -Level $Level -WhatIf:$dryRun
 exit $LASTEXITCODE

@@ -56,11 +56,9 @@ $scriptsDir = Join-KitPath -Path $projectDir -ChildPath 'scripts'
 
 $flagGmail = $true
 $flagNav = $true
-$flagSchedule = $true
 if (Test-KitProperty -Object $state -Name 'flags') {
     if (Test-KitProperty -Object $state.flags -Name 'gmail') { $flagGmail = [bool]$state.flags.gmail }
     if (Test-KitProperty -Object $state.flags -Name 'nav') { $flagNav = [bool]$state.flags.nav }
-    if (Test-KitProperty -Object $state.flags -Name 'schedule') { $flagSchedule = [bool]$state.flags.schedule }
 }
 
 # --- 1. Alap eszközök -----------------------------------------------------
@@ -268,27 +266,7 @@ if ($slugs.Count -eq 0) {
     }
 }
 
-# --- 7. Ütemezett feladat -------------------------------------------------
-
-if (-not $flagSchedule) {
-    Add-KitRow -Status 'WARN' -Name 'ütemezett futtatás' -Detail 'ki van kapcsolva (-SkipSchedule)' `
-        -Action 'Bekapcsolás: .\install.ps1'
-} else {
-    $task = Get-KitScheduledTaskInfo -TaskPath '\Controller\' -TaskName 'HaviRiport'
-    if (-not $task) {
-        Add-KitRow -Status 'FAIL' -Name 'ütemezett futtatás' -Detail 'a \Controller\HaviRiport feladat nincs meg' `
-            -Action 'Futtasd: .\install.ps1'
-    } elseif ($task.State -eq 'Disabled') {
-        Add-KitRow -Status 'FAIL' -Name 'ütemezett futtatás' -Detail 'a feladat le van tiltva' `
-            -Action 'Feladatütemező > Controller > HaviRiport > Engedélyezés'
-    } else {
-        $detail = "állapot: $($task.State)"
-        if ($task.NextRunTime) { $detail += ", következő futás: $($task.NextRunTime)" }
-        Add-KitRow -Status 'OK' -Name 'ütemezett futtatás' -Detail $detail
-    }
-}
-
-# --- 8. Gmail fiókok ------------------------------------------------------
+# --- 7. Gmail fiókok ------------------------------------------------------
 
 if (-not $flagGmail) {
     Add-KitRow -Status 'WARN' -Name 'Gmail' -Detail 'ki van kapcsolva (-SkipGmail)' -Action ''
@@ -338,7 +316,7 @@ if (-not $flagGmail) {
     }
 }
 
-# --- 9. Szint és verzió ---------------------------------------------------
+# --- 8. Szint és verzió ---------------------------------------------------
 
 $kitVersion = Get-KitVersion -KitPath $KitPath
 if (-not $state) {

@@ -1,6 +1,6 @@
 # 1. szint: Napi használat
 
-A felhasználó riportokat futtat és készít, a belső működést nem szerkeszti. Ezen a szinten csak az itt felsorolt parancsokat, eszközöket és fogalmakat használd és ajánld. Ami a 2. vagy a 3. szinthez tartozik (spec kézi szerkesztése, hookok, Feladatütemező, `claude -p`), azt ne hozd szóba; ha ő kérdez rá, irányítsd a `/level-up` parancshoz.
+A felhasználó riportokat futtat és készít, a belső működést nem szerkeszti. Ezen a szinten csak az itt felsorolt parancsokat, eszközöket és fogalmakat használd és ajánld. Ami a 2. vagy a 3. szinthez tartozik (spec kézi szerkesztése, hookok, `claude -p`), azt ne hozd szóba; ha ő kérdez rá, irányítsd a `/level-up` parancshoz.
 
 ## Mit csinál a felhasználó ezen a szinten
 
@@ -8,7 +8,6 @@ A felhasználó riportokat futtat és készít, a belső működést nem szerkes
 |---|---|
 | havi riport futtatása | `/report-run <slug>` (alapból az előző teljes hónap) |
 | másik időszak | `/report-run <slug> --period 2026-08` |
-| minden aktív riport egyszerre | `/report-run --all` |
 | új riport | `/report-new`, majd válaszol a hét interjúkörre |
 | áttekintés | `/report-list` |
 | kísérőlevél a riporthoz | `/draft-email` |
@@ -53,7 +52,7 @@ A `/report-edit` a 2. szinten kerül elő. Ha 1. szinten módosítást kér, mon
 
 A hook olyan kis program, amely magától fut a háttérben; a felhasználónak nincs vele dolga.
 
-- `session_tips.py`: minden indításkor egy tippet ír a szinthez, a hónap 5. és 7. napja között pedig emlékeztet, hogy az ütemezett havi riportnak el kellett készülnie.
+- `session_tips.py`: minden indításkor egy tippet ír a szinthez.
 - `prime_nudge.py`: `/clear`, kontextustömörítés és a tervezési módból kilépés után kéri a `/prime` futtatását, ha a projektben létezik.
 - `protect_delivery.py`: blokkolja az írást, a szerkesztést és a törlő parancsokat a leszállítási mappákban (`delivery.folder`, `powerbi.folder`) és a zárolt specekben; az üzenete a `/report-run` parancshoz irányít.
 

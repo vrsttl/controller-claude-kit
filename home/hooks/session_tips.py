@@ -1,28 +1,23 @@
 #!/usr/bin/env python3
 """SessionStart hook: one rotating Hungarian tip for the user's current kit level.
 
-Reads level, tips_seen and flags from <claude home>/kit-state.json, picks a tip
-from session_tips.json (fallbacks: session_tips.example.json, then a built-in
-tip), bumps tips_seen (best effort, atomic replace) and prints an
-additionalContext payload. Tips for level N pool levels 1..N so old tips keep
-rotating. KIT_TODAY=YYYY-MM-DD overrides today's date (tests only).
+Reads level and tips_seen from <claude home>/kit-state.json, picks a tip from
+session_tips.json (fallbacks: session_tips.example.json, then a built-in tip),
+bumps tips_seen (best effort, atomic replace) and prints an additionalContext
+payload. Tips for level N pool levels 1..N so old tips keep rotating.
 Fail-open: any error is logged to <claude home>/hooks/.hook-errors.log, exit 0.
 """
 
 import json
 import os
 import sys
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 HOOK_NAME = "session_tips"
 TIP_FILES = ("session_tips.json", "session_tips.example.json")
 BUILTIN_TIP = (
     "A /report-list parancs megmutatja az összes riportot és az utolsó futtatásuk eredményét."
-)
-SCHEDULE_REMINDER = (
-    "Emlékeztető: a hónap 5-én futó ütemezett havi riportnak mostanra el kellett készülnie. "
-    "Ellenőrizd a kézbesítési mappát, és ha hiányzik a fájl, futtasd a /report-run parancsot."
 )
 
 
@@ -92,16 +87,6 @@ def _save_state(state: dict, path: Path, tips_seen: int) -> None:
     os.replace(tmp, path)
 
 
-def _today() -> date:
-    raw = os.environ.get("KIT_TODAY", "").strip()
-    if raw:
-        try:
-            return date.fromisoformat(raw)
-        except ValueError:
-            pass
-    return date.today()
-
-
 def _run() -> None:
     try:
         sys.stdin.read()  # payload content is irrelevant
@@ -120,9 +105,6 @@ def _run() -> None:
         except Exception as exc:
             _log_error(f"cannot update tips_seen: {exc!r}")
     text = f"Tipp ({level}. szint): {tip}"
-    flags = state.get("flags")
-    if isinstance(flags, dict) and flags.get("schedule") is True and 5 <= _today().day <= 7:
-        text += " " + SCHEDULE_REMINDER
     payload = {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": text}}
     sys.stdout.write(json.dumps(payload) + "\n")
     sys.stdout.flush()

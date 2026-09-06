@@ -78,5 +78,5 @@ Ettől kezdve a `pull --period` a NAV kivonatból veszi a számlák listáját, 
 Akkor javasold a `/level-up` parancsot, ha a felhasználó:
 
 - legalább egy riportot módosított már a `/report-edit` paranccsal, és a következő futás rendben leszállt,
-- rákérdezett az ütemezett futásra, a Power BI kapcsolatra vagy arra, mit csinál egy ügynök,
+- rákérdezett a Power BI kapcsolatra vagy arra, mit csinál egy ügynök,
 - olyan ismétlődő kérdést hoz, amit egy `claude -p` parancs vagy egy hook oldana meg.

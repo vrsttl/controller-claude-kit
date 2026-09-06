@@ -14,7 +14,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-KIT_VERSION = "0.1.0"
+KIT_VERSION = "0.2.0"
 
 RIPORTOK_DIR = Path(os.environ.get("RIPORTOK_DIR", Path.home() / "Riportok"))
 

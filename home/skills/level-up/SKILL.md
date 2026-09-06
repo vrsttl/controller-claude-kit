@@ -14,11 +14,11 @@ Három szint van; a 3. a legmagasabb. A skill nem futtat riportot, csak a beáll
 |---|---|---|---|
 | 1 | Napi használat | `/report-run`, `/report-list`, `/report-new`, engedélykérdések, Esc, `/clear` | gmail és excel MCP; prime_nudge, session_tips, protect_delivery hook; riport-skillek és ügynökök |
 | 2 | Kontroll | tervezési mód, `/prime`, a projekt CLAUDE.md, a spec.yaml olvasása és szerkesztése, `/report-edit`, a szinkronnapló olvasása, NAV technikai felhasználó | microsoft-learn MCP; memory_backup hook; `rules/reports.md`, `rules/szamlazz-data.md` |
-| 3 | Automatizálás | ügynökök, hookok szerkesztése, Feladatütemező, Power BI modell MCP, `claude -p` | powerbi-modeling és ms365 MCP; `web-researcher` ügynök; parancssori receptek |
+| 3 | Automatizálás | ügynökök, hookok szerkesztése, Power BI modell MCP, `claude -p` | powerbi-modeling és ms365 MCP; `web-researcher` ügynök; parancssori receptek |
 
 ## 1. Jelenlegi szint
 
-1. `Read`: `~/.claude/kit-state.json`. Kulcsok: `level` (1..3), `kit_path`, `project_dir`, `updated_at`, `flags.gmail`, `flags.nav`, `flags.schedule`.
+1. `Read`: `~/.claude/kit-state.json`. Kulcsok: `level` (1..3), `kit_path`, `project_dir`, `updated_at`, `flags.gmail`, `flags.nav`.
 2. Ha a fájl hiányzik vagy nem olvasható: állj meg; a felhasználó futtassa a `doctor.ps1` szkriptet (`powershell -ExecutionPolicy Bypass -File "<kit_path>/doctor.ps1"`; a kit mappája alapból `~/claude-kit`).
 3. Ha a `level` 3: írd ki, hogy ez a legmagasabb szint, nincs több lépés, és a `rules/kit-level-3.md` fájl leírja a lehetőségeket. Vége.
 
@@ -35,7 +35,7 @@ Mutasd a következő szint sorát a fenti táblából két oszlopban (megtanulod
 3. szint, Automatizálás:
 
 1. `claude -p "Melyek az aktív riportok, és mikor futottak utoljára?"` a `~/Riportok` mappából.
-2. `schtasks /Query /TN "Controller\HaviRiport"`, utána `/report-run --all` kézzel, és hasonlítsd össze a két futtatási naplót.
+2. Power BI Desktop: Adatok lekérése, Excel-munkafüzet, a leszállított fájl; a Navigátorban a `tbl_<slug>_<entity>` táblát válaszd, ne a munkalapot.
 3. Kérdezz a `web-researcher` ügynöktől: "Nézz utána a NAV dokumentációban, változott-e a queryInvoiceDigest."
 
 ## 3. Megerősítés

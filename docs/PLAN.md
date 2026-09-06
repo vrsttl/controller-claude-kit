@@ -1,5 +1,10 @@
 # Plan: Claude Code starter kit for a finance controller (szamlazz.hu reporting)
 
+> Superseded on 2026-09-06 (v0.2.0): no unattended automation (Task Scheduler
+> and `--all` removed); README and HANDOVER rewritten in plain Hungarian with
+> technical detail in `docs/HALADO.md`. Per-client parameterisation deferred
+> until she asks for it.
+
 ## Context
 
 A friend of the user (controller at a small Hungarian IT company, Windows 11 laptop, Claude Code beginner who has already automated some recurring work) needs a packaged, one-script-installable Claude Code setup. The kit must (1) onboard her progressively into Claude Code features, (2) give her a self-serve, repeatable loop for ad-hoc → monthly Excel / Power BI reports fed from szamlazz.hu invoice data, (3) reuse the proven patterns from this workstation (interview skills, dry-run gates, hooks, rules, `/prime`), (4) ship the multi-account Gmail MCP, (5) include a per-project `/prime` bootstrap plus the nudge hook that fires after `/clear`, compaction and `ExitPlanMode`.

@@ -8,7 +8,7 @@
     "A /prime parancs betölti a projekt aktuális állapotát (riportok, utolsó szinkron). Futtasd /clear után is."
   ],
   "3": [
-    "A Feladatütemező havi futtatása a scripts/run_reports.py fájlt hívja. A napló a data mappában van, ha valami kimaradt.",
+    "A riportot te indítod, amikor kell: /report-run <slug> --period 2026-08. A futás naplója a reports/<slug>/runlog.jsonl fájlban van.",
     "A claude -p \"kérdés\" parancs egyetlen választ ad a terminálban, párbeszéd nélkül. Gyors ellenőrzésekhez jó."
   ]
 }

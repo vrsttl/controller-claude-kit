@@ -1,7 +1,7 @@
 ﻿# Tests for the pure helpers in lib/kit-common.ps1: manifest compare, the copy
 # semantics, kit-state preservation and the spec.yaml folder scanner. Nothing
-# here touches winget, the network or the Task Scheduler; the last block asserts
-# that every wrapper around those keeps its -DryRun escape hatch.
+# here touches winget or the network; the last block asserts that every wrapper
+# around those keeps its -DryRun escape hatch.
 #
 #   pwsh -NoProfile -File tests/test_kit_common.ps1
 
@@ -140,7 +140,7 @@ try {
     Write-Host "4. kit-state.json"
     $statePath = Join-Path $tempRoot 'kit-state.json'
     $first = Write-KitState -Path $statePath -KitVersion '0.1.0' -Level 1 -KitPath 'C:\Users\fanni\claude-kit' `
-        -ProjectDir 'C:\Users\fanni\Riportok' -Flags @{ gmail = $true; nav = $false; schedule = $true }
+        -ProjectDir 'C:\Users\fanni\Riportok' -Flags @{ gmail = $true; nav = $false }
 
     $onDisk = Read-KitJsonFile -Path $statePath
     $keys = @($onDisk.PSObject.Properties.Name)
@@ -148,15 +148,18 @@ try {
     Test-Assert (($keys -join ',') -eq ($expectedKeys -join ',')) "a kulcsok es a sorrendjuk pontosak (kapott: $($keys -join ','))"
     Test-Assert ($onDisk.level -eq 1) 'level 1'
     Test-Assert ($onDisk.tips_seen -eq 0) 'tips_seen 0 az elso telepiteskor'
-    Test-Assert ($onDisk.flags.gmail -eq $true -and $onDisk.flags.nav -eq $false -and $onDisk.flags.schedule -eq $true) 'a flags ertekei helyesek'
-    Test-Assert (@($onDisk.flags.PSObject.Properties.Name) -join ',' -eq 'gmail,nav,schedule') 'a flags kulcsai pontosak'
+    Test-Assert ($onDisk.flags.gmail -eq $true -and $onDisk.flags.nav -eq $false) 'a flags ertekei helyesek'
+    Test-Assert ((@($onDisk.flags.PSObject.Properties.Name) -join ',') -eq 'gmail,nav') "a flags kulcsai pontosak (kapott: $(@($onDisk.flags.PSObject.Properties.Name) -join ','))"
+    Test-Assert (-not (Test-KitProperty -Object $onDisk.flags -Name 'schedule')) 'nincs schedule kulcs a flags alatt'
 
-    # she used the kit for a while: tips_seen moved on
+    # she used the kit for a while: tips_seen moved on, and the file still carries
+    # the flags.schedule key a 0.1.0 install wrote
     $onDisk.tips_seen = 7
+    $onDisk.flags | Add-Member -NotePropertyName 'schedule' -NotePropertyValue $true -Force
     Write-KitJsonFile -Path $statePath -Value $onDisk
     Start-Sleep -Milliseconds 1100
     $second = Write-KitState -Path $statePath -KitVersion '0.2.0' -Level 2 -KitPath 'C:\Users\fanni\claude-kit' `
-        -ProjectDir 'C:\Users\fanni\Riportok' -Flags @{ gmail = $true; nav = $true; schedule = $false }
+        -ProjectDir 'C:\Users\fanni\Riportok' -Flags @{ gmail = $true; nav = $true }
     $reread = Read-KitJsonFile -Path $statePath
 
     Test-Assert ($reread.installed_at -eq $first.installed_at) 'az installed_at megmaradt'
@@ -164,7 +167,8 @@ try {
     Test-Assert ($reread.level -eq 2) 'a level frissult'
     Test-Assert ($reread.kit_version -eq '0.2.0') 'a kit_version frissult'
     Test-Assert ($reread.updated_at -ne $first.updated_at) 'az updated_at frissult'
-    Test-Assert ($reread.flags.schedule -eq $false) 'a flags frissult'
+    Test-Assert ($reread.flags.nav -eq $true) 'a flags frissult'
+    Test-Assert (-not (Test-KitProperty -Object $reread.flags -Name 'schedule')) 'a regi schedule kulcs eltunt az ujrairaskor'
     Test-Assert ($second.installed_at -eq $first.installed_at) 'a visszaadott objektum is orzi az installed_at-et'
 
     Write-Host "4b. -DryRun nem ir"
@@ -215,8 +219,6 @@ powerbi:
         'Invoke-KitWinget',
         'Invoke-KitWebInstall',
         'Install-KitUv',
-        'New-KitMonthlyTrigger',
-        'Register-KitMonthlyTask',
         'Copy-KitSection',
         'Copy-KitHome',
         'Copy-KitFile',
@@ -236,8 +238,7 @@ powerbi:
     Write-Host "7b. a burkolok -DryRun mellett nem hivnak rendszerparancsot"
     Test-Assert ((Invoke-KitWinget -PackageId 'Fake.Package' -Name 'proba' -DryRun) -eq $true) 'Invoke-KitWinget -DryRun visszater'
     Test-Assert ((Invoke-KitWebInstall -Url 'https://example.invalid/x.ps1' -Name 'proba' -DryRun) -eq $true) 'Invoke-KitWebInstall -DryRun visszater'
-    Test-Assert ($null -eq (New-KitMonthlyTrigger -DryRun)) 'New-KitMonthlyTrigger -DryRun nem epit CIM peldanyt'
-    Test-Assert ($null -eq (Register-KitMonthlyTask -Execute 'uv' -WorkingDirectory $tempRoot -DryRun)) 'Register-KitMonthlyTask -DryRun nem regisztral'
+    Test-Assert ((Remove-KitLegacyScheduledTask) -eq $false) 'Remove-KitLegacyScheduledTask Windows nelkul nem csinal semmit'
 
     # --- 8. version and path helpers ---------------------------------------
     Write-Host "8. verzio es utvonal segedek"
