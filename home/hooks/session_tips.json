@@ -1,0 +1,38 @@
+{
+  "1": [
+    "A /report-run <slug> parancs alapból az előző teljes hónapot futtatja; másik hónaphoz add hozzá: --period 2026-08.",
+    "Minden lezárt feladat után írd be: /clear. A következő riportnak tiszta kontextus kell.",
+    "Ha Claude olyat készül tenni, amit nem szeretnél, nyomj Esc-et: a művelet leáll, és semmi nem sérül.",
+    "Az engedélykérésnél a nem mindig biztonságos: nem ront el semmit, és a kérdést újra fel lehet tenni.",
+    "A /report-list egy táblázatban mutatja az összes riportot, a verziót és az utolsó futás eredményét.",
+    "Új riporthoz indítsd a /report-new parancsot, és válaszolj a hét interjúkörre; a végén próbafuttatás jön.",
+    "A leszállított Excel fájlt soha ne szerkeszd kézzel: módosítsd a specet, és futtasd újra a /report-run parancsot.",
+    "Ha a riport függőben maradt (.pending.xlsx), zárd be az Excelben nyitott fájlt, és futtasd újra a /report-run parancsot.",
+    "A /draft-email csak piszkozatot készít a Gmailben; küldeni csak te tudsz, a szó szerinti küldd el utasítással.",
+    "Az uv run scripts/szamlazz_sync.py status parancs megmutatja, mikor volt az utolsó szinkron, és hány számla van előtagonként.",
+    "A hónap 5-én 07:00-kor az ütemezett feladat magától lefuttatja az aktív riportokat; utána nézd meg a leszállítási mappát.",
+    "Ha elakadtál, a claude-kit mappában futtasd a doctor.ps1 szkriptet: táblázatot ad, és minden hibás sorhoz egy mit tegyél tanácsot."
+  ],
+  "2": [
+    "Shift+Tab kétszer: tervezési mód. Claude csak olvas és tervet ír, nem módosít; nagyobb változtatás előtt használd.",
+    "/clear után a Riportok mappában a /prime tölti vissza az állapotot: riportok, utolsó szinkron, verziók.",
+    "Riport módosításához a /report-edit <slug> a hivatalos út: csak az érintett interjúköröket nyitja újra, és emeli a verziót.",
+    "Kézi spec-szerkesztés után mindig: uv run scripts/report_spec.py --validate reports/<slug>/spec.yaml.",
+    "Verziót és changelogot ne kézzel írj: uv run scripts/report_spec.py --bump reports/<slug>/spec.yaml patch --note \"mi változott\".",
+    "Havi egyeztetés: Főkönyvi CSV és Áfalista XLSX a data/drops mappába, import-csv, import-afalista, majd reconcile --period 2026-08.",
+    "A reconcile 1-es kilépési kódja eltérést jelent: a data/reconcile-<hónap>.csv soronként mutatja, hol tér el a gyorsítótár az exporttól.",
+    "A mértékkatalógus magyar címkékkel és forrásbetűvel: uv run scripts/report_spec.py --catalogue.",
+    "Az Agent-lekérdezés díját a szamlazz.hu ügyfélszolgálatával erősítsd meg, mielőtt egy teljes évet felsorolsz.",
+    "NAV technikai felhasználóval a pull --period 2026-08 a NAV számlalistáját veszi alapul; a négy titok: uv run scripts/get_secret.py set nav.gov.hu <név>."
+  ],
+  "3": [
+    "Az ügynökök leírása a ~/.claude/agents mappában van: a FOR és a NEM ERRE lista mondja meg, melyik mire való.",
+    "Az ütemezett feladat állapota: schtasks /Query /TN \"\\Controller\\HaviRiport\" /V /FO LIST; próbafuttatás: schtasks /Run ugyanezzel a névvel.",
+    "A claude -p \"kérdés\" egy választ ad a terminálban, párbeszéd nélkül; csak olvasó feladatra használd.",
+    "Hook szerkesztése előtt olvasd el a claude-kit/docs/HOOKS.md fájlt, és készíts .bak másolatot; a hookok hibatűrők, a hibát a hooks/.hook-errors.log mutatja.",
+    "Power BI Desktop: a leszállított munkafüzet tbl_<slug>_<entity> tábláira köss, nem a munkalapokra; a nevek 1.0.0 után nem változnak.",
+    "A powerbi.enabled: true kulccsal a riport CSV-ket is ír a powerbi.folder mappába, minden futásnál helyben felülírva.",
+    "Hivatalos dokumentációs kérdésre a web-researcher ügynök válaszol URL-lel és idézettel; forrás nélkül nem állít semmit.",
+    "Ami a kit fejlesztése (új mérték, új skill, új hook), az a claude-kit repóba való; az update.ps1 hozza át, és felülírja a helyi másolatot."
+  ]
+}

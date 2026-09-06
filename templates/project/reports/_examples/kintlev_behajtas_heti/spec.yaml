@@ -1,0 +1,78 @@
+# Kintlévőség lista behajtáshoz, heti riport (mintaspec).
+# Mire való: a futtatás napján nyitott követelések korosítva, a 30 és 60 napon
+# túl lejárt számlák listája, a nyitott készpénzes számlák, EUR kitettség. Az
+# időszak a folyó hét eleje óta eltelt napok, a fordulónap a futtatás napja.
+# Mindig felülírja az előző fájlt (overwrite: always), négy verziót tart meg.
+# Teljes forintösszegek (huf_full), mert behajtáskor a pontos összeg kell.
+report:
+  id: rpt_deadbeef
+  slug: kintlev_behajtas_heti
+  title_hu: Kintlévőség lista behajtáshoz
+  title_en: Receivables collection list
+  owner: controller@example.hu
+  version: 1.0.0
+  status: active
+  changelog:
+    - {version: 1.0.0, date: 2026-09-06, note: első aktív verzió}
+period:
+  grain: week
+  basis: kelt
+  offset: current_week_to_date
+  fiscal_year_start_month: 1
+  as_of: run_date
+  history_months: 6
+  storno_attribution: issue_month
+sources:
+  agent: {required: true}
+  nav_digest: {required: false}
+  fokonyvi_csv: {required: false, path: "data/drops/fokonyvi_{period}.csv"}
+  afalista: {required: false, path: "data/drops/afalista_{period}.xlsx"}
+  max_age_days: 1
+  cash_card_autopaid: false
+filters:
+  customers: {include: ["*"], exclude: []}
+  invoice_prefixes: []
+  currencies: []
+  vat_rates: []
+  doc_types: [invoice, modifier, storno]
+  exclude_proforma: true
+  min_net_huf: 0
+dimensions: [month, customer, currency]
+measures:
+  - {id: ar_balance, comparisons: [mom], format: huf}
+  - {id: ar_aging, format: huf}
+  - {id: overdue_amt, comparisons: [mom], format: huf}
+  - {id: overdue_cnt, comparisons: [mom], format: count}
+  - {id: dso, comparisons: [mom, avg3m], format: days}
+  - {id: eur_open, comparisons: [mom], format: huf}
+  - {id: cash_in, comparisons: [mom, avg3m], format: huf}
+  - {id: rev_net_cust, format: huf}
+thresholds:
+  overdue_amt: {warn: 0.15, critical: 0.30, direction: above, unit: "pct_of:ar_balance"}
+  dso: {warn: 45, critical: 60, direction: above, unit: abs}
+exceptions:
+  - {id: exc_o30, rule: overdue_gt_days, params: {days: 30}, severity: warn, max_rows: 40}
+  - {id: exc_o60, rule: overdue_gt_days, params: {days: 60}, severity: critical}
+  - {id: exc_cash, rule: unpaid_cash_invoice, severity: warn}
+output:
+  file_pattern: "{slug}_{run_date}.xlsx"
+  language: hu
+  number_profile: huf_full
+  sheets: [executive, exceptions, invoice, payment, customer, runlog]
+  executive:
+    blocks: [title, tiles, ar_aging, exceptions, top_customers, footnote]
+    tiles: [ar_balance, overdue_amt, overdue_cnt, dso, eur_open, cash_in]
+    variance_rows: []
+    top_n: 10
+  table_prefix: tbl_kintlev_behajtas_heti
+powerbi:
+  enabled: false
+  folder: exports/powerbi
+  files: [fact_invoice, fact_payment, dim_customer, dim_date]
+delivery:
+  folder: exports
+  overwrite: always
+  keep_n_versions: 4
+validation:
+  checks: []
+  min_rows: 0

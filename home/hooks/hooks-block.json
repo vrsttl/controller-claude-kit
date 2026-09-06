@@ -1,0 +1,67 @@
+{
+  "kit": "controller",
+  "hook_files": ["prime_nudge.py", "session_tips.py", "protect_delivery.py", "memory_backup.py"],
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$HOME/.claude/hooks/prime_nudge.py\" SessionStart",
+            "timeout": 10
+          }
+        ],
+        "kit_min_level": 1
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$HOME/.claude/hooks/session_tips.py\"",
+            "timeout": 10
+          }
+        ],
+        "kit_min_level": 1
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$HOME/.claude/hooks/prime_nudge.py\" PostToolUse",
+            "timeout": 10
+          }
+        ],
+        "kit_min_level": 1
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$HOME/.claude/hooks/protect_delivery.py\"",
+            "timeout": 10
+          }
+        ],
+        "kit_min_level": 1
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$HOME/.claude/hooks/memory_backup.py\"",
+            "timeout": 10
+          }
+        ],
+        "kit_min_level": 2
+      }
+    ]
+  }
+}

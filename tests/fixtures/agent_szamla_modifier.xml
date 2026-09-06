@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<szamla>
+  <szallito>
+    <id>1</id>
+    <nev>Teszt IT Kft.</nev>
+    <adoszam>12345678-2-41</adoszam>
+  </szallito>
+  <alap>
+    <id>1004</id>
+    <szamlaszam>SZLA-2026-4</szamlaszam>
+    <tipus>HS</tipus>
+    <eszamla>false</eszamla>
+    <hivszamlaszam>SZLA-2026-3</hivszamlaszam>
+    <kelt>2026-08-22</kelt>
+    <telj>2026-08-22</telj>
+    <fizh>2026-09-06</fizh>
+    <fizmod>Átutalás</fizmod>
+    <fizmodunified>transfer</fizmodunified>
+    <nyelv>hu</nyelv>
+    <devizanem>HUF</devizanem>
+    <devizaarf>1</devizaarf>
+    <rendelesszam></rendelesszam>
+    <megjegyzes>Helyesbítés: kimaradt tétel</megjegyzes>
+    <teszt>false</teszt>
+  </alap>
+  <vevo>
+    <id>502</id>
+    <nev>Béta Bt.</nev>
+    <cim>
+      <orszag>Magyarország</orszag>
+      <irsz>6000</irsz>
+      <telepules>Kecskemét</telepules>
+      <cim>Piac tér 3.</cim>
+    </cim>
+    <adoszam>34567890-1-03</adoszam>
+    <privatePersonIndicator>false</privatePersonIndicator>
+  </vevo>
+  <tetelek>
+    <tetel>
+      <nev>Kiegészítő tanácsadás</nev>
+      <mennyiseg>1</mennyiseg>
+      <mennyisegiegyseg>óra</mennyisegiegyseg>
+      <nettoegysegar>10000</nettoegysegar>
+      <afakulcs>27</afakulcs>
+      <netto>10000</netto>
+      <afa>2700</afa>
+      <brutto>12700</brutto>
+      <fokonyv>
+        <arbevetel>913</arbevetel>
+      </fokonyv>
+    </tetel>
+  </tetelek>
+  <osszegek>
+    <afakulcsossz>
+      <afakulcs>27</afakulcs>
+      <netto>10000</netto>
+      <afa>2700</afa>
+      <brutto>12700</brutto>
+    </afakulcsossz>
+    <totalossz>
+      <netto>10000</netto>
+      <afa>2700</afa>
+      <brutto>12700</brutto>
+    </totalossz>
+  </osszegek>
+  <kifizetesek></kifizetesek>
+</szamla>

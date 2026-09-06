@@ -1,0 +1,76 @@
+# ÁFA analitika negyedéves riport (mintaspec).
+# Mire való: a lezárt negyedév ÁFA-kulcsonkénti nettó, ÁFA és bruttó összegei
+# teljesítési dátum szerint (ez az áfabevallás alapja), az Áfalista exporttal
+# egyeztetve. Az Áfalista betöltése kötelező: enélkül a V07 ellenőrzés hibázik
+# és a riport nem kerül kézbesítésre.
+report:
+  id: rpt_a1b2c3d4
+  slug: afa_analitika_negyedev
+  title_hu: ÁFA analitika negyedéves
+  title_en: Quarterly VAT analytics
+  owner: controller@example.hu
+  version: 1.0.0
+  status: active
+  changelog:
+    - {version: 1.0.0, date: 2026-09-06, note: első aktív verzió}
+period:
+  grain: quarter
+  basis: teljesites
+  offset: previous_full_quarter
+  fiscal_year_start_month: 1
+  as_of: period_end
+  history_months: 24
+  storno_attribution: issue_month
+sources:
+  agent: {required: true}
+  nav_digest: {required: false}
+  fokonyvi_csv: {required: false, path: "data/drops/fokonyvi_{period}.csv"}
+  afalista: {required: true, path: "data/drops/afalista_{period}.xlsx"}
+  max_age_days: 3
+  cash_card_autopaid: true
+filters:
+  customers: {include: ["*"], exclude: []}
+  invoice_prefixes: []
+  currencies: []
+  vat_rates: []
+  doc_types: [invoice, modifier, storno]
+  exclude_proforma: true
+  min_net_huf: 0
+dimensions: [month, vat_rate, currency, customer]
+measures:
+  - {id: vat_total, comparisons: [mom, yoy], format: huf_k}
+  - {id: rev_net, comparisons: [mom, yoy, ytd], format: huf_k}
+  - {id: inv_count, comparisons: [mom, yoy], format: count}
+  - {id: modifier_rate, comparisons: [mom, avg3m], format: pct}
+  - {id: rev_net_vat, format: huf_k}
+  - {id: vat_by_rate, format: huf_k}
+  - {id: rev_net_cur, format: huf_k}
+thresholds:
+  modifier_rate: {warn: 0.05, direction: above, unit: pct}
+exceptions:
+  - {id: exc_mod, rule: modifier_in_period, severity: info}
+  - {id: exc_storno, rule: storno_in_period, severity: info}
+  - {id: exc_taxno, rule: missing_customer_taxno, params: {only_domestic_companies: true}, severity: warn}
+output:
+  file_pattern: "{slug}_{period}_v{version}.xlsx"
+  language: hu
+  number_profile: huf_thousands
+  sheets: [executive, exceptions, invoice, line, customer, measure, definitions, runlog]
+  executive:
+    blocks: [title, tiles, vat_summary, variance, exceptions, footnote]
+    tiles: [vat_total, rev_net, inv_count, modifier_rate]
+    variance_rows: [vat_total, rev_net, inv_count, modifier_rate]
+    top_n: 10
+  table_prefix: tbl_afa_analitika_negyedev
+powerbi:
+  enabled: false
+  folder: exports/powerbi
+  files: [fact_invoice, fact_invoice_line, fact_measure, dim_customer, dim_date]
+delivery:
+  folder: exports
+  overwrite: same_version
+  keep_n_versions: 6
+validation:
+  checks:
+    - {id: V07, tolerance: 1, severity: fail, blocks_delivery: true}
+  min_rows: 1

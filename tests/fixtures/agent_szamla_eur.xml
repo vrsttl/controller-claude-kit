@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<szamla>
+  <szallito>
+    <id>1</id>
+    <nev>Teszt IT Kft.</nev>
+    <adoszam>12345678-2-41</adoszam>
+    <adoszameu>HU12345678</adoszameu>
+  </szallito>
+  <alap>
+    <id>1005</id>
+    <szamlaszam>E-SZLA-2026-1</szamlaszam>
+    <tipus>SZ</tipus>
+    <eszamla>true</eszamla>
+    <hivszamlaszam></hivszamlaszam>
+    <kelt>2026-08-12</kelt>
+    <telj>2026-08-12</telj>
+    <fizh>2026-09-11</fizh>
+    <fizmod>Átutalás</fizmod>
+    <fizmodunified>transfer</fizmodunified>
+    <nyelv>en</nyelv>
+    <devizanem>EUR</devizanem>
+    <devizabank>MNB</devizabank>
+    <devizaarf>400</devizaarf>
+    <rendelesszam>AT-77</rendelesszam>
+    <megjegyzes>Consulting August</megjegyzes>
+    <teszt>false</teszt>
+  </alap>
+  <vevo>
+    <id>601</id>
+    <nev>Gamma GmbH</nev>
+    <cim>
+      <orszag>Ausztria</orszag>
+      <irsz>1010</irsz>
+      <telepules>Wien</telepules>
+      <cim>Ring 5</cim>
+    </cim>
+    <email>office@gamma.example</email>
+    <adoszam></adoszam>
+    <adoszameu>ATU12345678</adoszameu>
+    <privatePersonIndicator>false</privatePersonIndicator>
+  </vevo>
+  <tetelek>
+    <tetel>
+      <nev>Consulting services</nev>
+      <mennyiseg>20</mennyiseg>
+      <mennyisegiegyseg>óra</mennyisegiegyseg>
+      <nettoegysegar>50</nettoegysegar>
+      <afatipus>EU</afatipus>
+      <afakulcs>EU</afakulcs>
+      <netto>1000</netto>
+      <afa>0</afa>
+      <brutto>1000</brutto>
+      <fokonyv>
+        <arbevetel>914</arbevetel>
+      </fokonyv>
+    </tetel>
+  </tetelek>
+  <osszegek>
+    <afakulcsossz>
+      <afatipus>EU</afatipus>
+      <afakulcs>EU</afakulcs>
+      <netto>1000</netto>
+      <afa>0</afa>
+      <brutto>1000</brutto>
+    </afakulcsossz>
+    <totalossz>
+      <netto>1000</netto>
+      <afa>0</afa>
+      <brutto>1000</brutto>
+    </totalossz>
+  </osszegek>
+  <kifizetesek>
+    <kifizetes>
+      <datum>2026-08-30</datum>
+      <jogcim>átutalás</jogcim>
+      <osszeg>600</osszeg>
+      <bankszamlaszam>HU11 1111 1111 2222 2222 3333 3333</bankszamlaszam>
+      <devizaarf>400</devizaarf>
+    </kifizetes>
+  </kifizetesek>
+</szamla>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<szamla>
+  <szallito>
+    <id>1</id>
+    <nev>Teszt IT Kft.</nev>
+    <adoszam>12345678-2-41</adoszam>
+  </szallito>
+  <alap>
+    <id>1002</id>
+    <szamlaszam>SZLA-2026-2</szamlaszam>
+    <tipus>SS</tipus>
+    <eszamla>false</eszamla>
+    <hivszamlaszam>SZLA-2026-1</hivszamlaszam>
+    <kelt>2026-08-25</kelt>
+    <telj>2026-08-05</telj>
+    <fizh>2026-08-25</fizh>
+    <fizmod>Átutalás</fizmod>
+    <fizmodunified>transfer</fizmodunified>
+    <nyelv>hu</nyelv>
+    <devizanem>Ft</devizanem>
+    <devizaarf>0</devizaarf>
+    <rendelesszam>PO-2026-11</rendelesszam>
+    <megjegyzes>Sztornó: téves vevő</megjegyzes>
+    <teszt>false</teszt>
+  </alap>
+  <vevo>
+    <id>501</id>
+    <nev>Alfa Ügyfél Zrt.</nev>
+    <cim>
+      <orszag>Magyarország</orszag>
+      <irsz>1052</irsz>
+      <telepules>Budapest</telepules>
+      <cim>Váci utca 10.</cim>
+    </cim>
+    <adoszam>23456789-2-41</adoszam>
+    <privatePersonIndicator>false</privatePersonIndicator>
+  </vevo>
+  <tetelek>
+    <tetel>
+      <nev>Szoftverfejlesztés (augusztus)</nev>
+      <mennyiseg>-10</mennyiseg>
+      <mennyisegiegyseg>óra</mennyisegiegyseg>
+      <nettoegysegar>10000</nettoegysegar>
+      <afakulcs>27</afakulcs>
+      <netto>-100000</netto>
+      <afa>-27000</afa>
+      <brutto>-127000</brutto>
+      <fokonyv>
+        <arbevetel>911</arbevetel>
+      </fokonyv>
+    </tetel>
+    <tetel>
+      <nev>Szakkönyv</nev>
+      <mennyiseg>-4</mennyiseg>
+      <mennyisegiegyseg>db</mennyisegiegyseg>
+      <nettoegysegar>5000</nettoegysegar>
+      <afakulcs>5</afakulcs>
+      <netto>-20000</netto>
+      <afa>-1000</afa>
+      <brutto>-21000</brutto>
+      <fokonyv>
+        <arbevetel>912</arbevetel>
+      </fokonyv>
+    </tetel>
+  </tetelek>
+  <osszegek>
+    <afakulcsossz>
+      <afakulcs>27</afakulcs>
+      <netto>-100000</netto>
+      <afa>-27000</afa>
+      <brutto>-127000</brutto>
+    </afakulcsossz>
+    <afakulcsossz>
+      <afakulcs>5</afakulcs>
+      <netto>-20000</netto>
+      <afa>-1000</afa>
+      <brutto>-21000</brutto>
+    </afakulcsossz>
+    <totalossz>
+      <netto>-120000</netto>
+      <afa>-28000</afa>
+      <brutto>-148000</brutto>
+    </totalossz>
+  </osszegek>
+  <kifizetesek></kifizetesek>
+</szamla>

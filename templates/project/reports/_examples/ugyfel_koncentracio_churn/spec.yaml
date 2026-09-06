@@ -1,0 +1,76 @@
+# Ügyfél-koncentráció és lemorzsolódás riport (mintaspec).
+# Mire való: a havi árbevétel vevőnkénti megoszlása, a legnagyobb 5 vevő
+# részesedése, az új, visszatérő és elvesztett vevők száma. A sztornó az
+# eredeti számla hónapjába kerül, hogy a vevőnkénti trend ne ugráljon. A
+# Power BI CSV export be van kapcsolva (exports/powerbi mappa).
+report:
+  id: rpt_c0ffee12
+  slug: ugyfel_koncentracio_churn
+  title_hu: Ügyfél-koncentráció és lemorzsolódás
+  title_en: Customer concentration and churn
+  owner: controller@example.hu
+  version: 1.0.0
+  status: active
+  changelog:
+    - {version: 1.0.0, date: 2026-09-06, note: első aktív verzió}
+period:
+  grain: month
+  basis: kelt
+  offset: previous_full_month
+  fiscal_year_start_month: 1
+  as_of: period_end
+  history_months: 24
+  storno_attribution: original_month
+sources:
+  agent: {required: true}
+  nav_digest: {required: false}
+  fokonyvi_csv: {required: false, path: "data/drops/fokonyvi_{period}.csv"}
+  afalista: {required: false, path: "data/drops/afalista_{period}.xlsx"}
+  max_age_days: 3
+  cash_card_autopaid: true
+filters:
+  customers: {include: ["*"], exclude: ["*teszt*"]}
+  invoice_prefixes: []
+  currencies: []
+  vat_rates: []
+  doc_types: [invoice, modifier, storno]
+  exclude_proforma: true
+  min_net_huf: 0
+dimensions: [month, customer]
+measures:
+  - {id: rev_net, comparisons: [mom, yoy, ytd], format: huf_k}
+  - {id: rev_net_cust, format: huf_k}
+  - {id: top_n_share, params: {n: 5}, comparisons: [mom, yoy], format: pct}
+  - {id: cust_active, comparisons: [mom, yoy], format: count}
+  - {id: cust_new, comparisons: [mom], format: count}
+  - {id: cust_returning, comparisons: [mom], format: count}
+  - {id: cust_churned, comparisons: [mom], format: count}
+  - {id: avg_inv, comparisons: [mom, avg3m], format: huf_k}
+thresholds:
+  top_n_share: {warn: 0.70, critical: 0.85, direction: above, unit: pct}
+  cust_churned: {warn: 0.10, direction: above, unit: "pct_of:cust_active"}
+exceptions:
+  - {id: exc_dup, rule: duplicate_customer_name, severity: warn}
+  - {id: exc_outlier, rule: amount_outlier_zscore, params: {z: 3.0, window_months: 12}, severity: info}
+output:
+  file_pattern: "{slug}_{period}_v{version}.xlsx"
+  language: hu
+  number_profile: huf_thousands
+  sheets: [executive, exceptions, invoice, customer, measure, definitions, runlog]
+  executive:
+    blocks: [title, tiles, top_customers, variance, exceptions, footnote]
+    tiles: [rev_net, cust_active, cust_new, cust_churned, top_n_share, avg_inv]
+    variance_rows: [rev_net, top_n_share, cust_active, cust_new, cust_returning, cust_churned, avg_inv]
+    top_n: 15
+  table_prefix: tbl_ugyfel_koncentracio_churn
+powerbi:
+  enabled: true
+  folder: exports/powerbi
+  files: [fact_invoice, fact_measure, dim_customer, dim_date]
+delivery:
+  folder: exports
+  overwrite: same_version
+  keep_n_versions: 6
+validation:
+  checks: []
+  min_rows: 1

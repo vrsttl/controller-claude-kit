@@ -1,0 +1,29 @@
+[project]
+name = "controller-claude-kit"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2.2",
+    "xlsxwriter>=3.2",
+    "openpyxl>=3.1",
+    "pyyaml>=6",
+    "keyring>=25",
+    "requests>=2.32",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["scripts", "home/hooks"]

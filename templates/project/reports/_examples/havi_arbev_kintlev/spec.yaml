@@ -1,0 +1,92 @@
+# Havi árbevétel és kintlévőség riport (mintaspec).
+# Mire való: a lezárt hónap nettó és bruttó árbevétele, számlaszám, a hónap végi
+# kintlévőség korosítva, DSO, beszedés, sztornó arány, plusz a lejárt és nagy
+# összegű nyitott számlák listája. Ez a kiindulópont a legtöbb havi riporthoz:
+# másold a reports/<slug>/ mappába, írd át a slugot és a címet, futtasd a
+# --validate ellenőrzést, majd a build.py-t.
+report:
+  id: rpt_3f9a1c2e
+  slug: havi_arbev_kintlev
+  title_hu: Havi árbevétel és kintlévőség
+  title_en: Monthly revenue and receivables
+  owner: controller@example.hu
+  version: 1.0.0
+  status: active
+  changelog:
+    - {version: 1.0.0, date: 2026-09-06, note: első aktív verzió}
+period:
+  grain: month
+  basis: kelt
+  offset: previous_full_month
+  fiscal_year_start_month: 1
+  as_of: period_end
+  history_months: 13
+  storno_attribution: issue_month
+sources:
+  agent: {required: true}
+  nav_digest: {required: false}
+  fokonyvi_csv: {required: false, path: "data/drops/fokonyvi_{period}.csv"}
+  afalista: {required: false, path: "data/drops/afalista_{period}.xlsx"}
+  max_age_days: 3
+  cash_card_autopaid: true
+filters:
+  customers: {include: ["*"], exclude: []}
+  invoice_prefixes: []
+  currencies: []
+  vat_rates: []
+  doc_types: [invoice, modifier, storno]
+  exclude_proforma: true
+  min_net_huf: 0
+dimensions: [month, customer, vat_rate]
+measures:
+  - {id: rev_net, comparisons: [mom, yoy, ytd], format: huf_k}
+  - {id: rev_gross, comparisons: [mom, yoy, ytd], format: huf_k}
+  - {id: inv_count, comparisons: [mom, yoy], format: count}
+  - {id: avg_inv, comparisons: [mom, avg3m], format: huf_k}
+  - {id: cash_in, comparisons: [mom, yoy], format: huf_k}
+  - {id: coll_rate, comparisons: [mom, avg3m], format: pct}
+  - {id: storno_rate, comparisons: [mom, avg3m], format: pct}
+  - {id: cust_active, comparisons: [mom], format: count}
+  - {id: cust_new, comparisons: [mom], format: count}
+  - {id: ar_balance, comparisons: [mom], format: huf_k}
+  - {id: ar_aging, format: huf_k}
+  - {id: overdue_amt, comparisons: [mom], format: huf_k}
+  - {id: dso, comparisons: [mom, avg3m], format: days}
+  - {id: rev_net_cust, format: huf_k}
+  - {id: rev_net_vat, format: huf_k}
+  - {id: vat_by_rate, format: huf_k}
+thresholds:
+  overdue_amt: {warn: 2000000, critical: 5000000, direction: above, unit: abs}
+  dso: {warn: 45, critical: 60, direction: above, unit: abs}
+  storno_rate: {warn: 0.03, critical: 0.05, direction: above, unit: pct}
+exceptions:
+  - {id: exc_overdue30, rule: overdue_gt_days, params: {days: 30}, severity: warn, max_rows: 20}
+  - {id: exc_overdue_big, rule: overdue_gt_amount, params: {amount_huf: 1000000}, severity: critical}
+  - {id: exc_storno, rule: storno_in_period, severity: info}
+  - {id: exc_taxno, rule: missing_customer_taxno, severity: warn}
+  - {id: exc_fx, rule: fx_deviation, params: {tolerance: 0.005}, severity: warn}
+output:
+  file_pattern: "{slug}_{period}_v{version}.xlsx"
+  language: hu
+  number_profile: huf_thousands
+  sheets: [executive, exceptions, invoice, customer, measure, definitions, runlog]
+  executive:
+    blocks: [title, tiles, variance, ar_aging, vat_summary, top_customers, exceptions, footnote]
+    tiles: [rev_net, rev_gross, ar_balance, overdue_amt, dso, inv_count]
+    variance_rows: [rev_net, rev_gross, inv_count, avg_inv, cash_in, coll_rate, storno_rate, cust_active, cust_new]
+    top_n: 10
+  table_prefix: tbl_havi_arbev_kintlev
+powerbi:
+  enabled: false
+  folder: exports/powerbi
+  files: [fact_invoice, fact_measure, dim_customer, dim_date]
+delivery:
+  folder: exports
+  overwrite: same_version
+  keep_n_versions: 6
+validation:
+  checks:
+    - {id: V04, tolerance: 1, severity: fail, blocks_delivery: true}
+    - {id: V05, tolerance: 1, severity: fail, blocks_delivery: true}
+    - {id: V07, tolerance: 1, severity: warn, blocks_delivery: false}
+  min_rows: 1

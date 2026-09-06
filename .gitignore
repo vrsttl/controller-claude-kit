@@ -1,0 +1,13 @@
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.pyc
+.staging/
+_dryrun/
+tests/fixtures/fixture.db
+.DS_Store
+*.log
+node_modules/
+.claude/settings.local.json
+.claude/.in_subtask.flag

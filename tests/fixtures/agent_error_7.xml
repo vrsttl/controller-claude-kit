@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmlszamlavalasz xmlns="http://www.szamlazz.hu/xmlszamlavalasz">
+  <sikeres>false</sikeres>
+  <hibakod>7</hibakod>
+  <hibauzenet>Hiányzó adat: számla xml (ismeretlen számlaszám, rendelésszám vagy külső azonosító).</hibauzenet>
+</xmlszamlavalasz>

@@ -1,0 +1,3 @@
+# The installer compares sha256 hashes from manifest.json against the files on
+# her laptop, so a CRLF checkout would make every managed file look modified.
+* -text

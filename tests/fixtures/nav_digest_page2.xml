@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QueryInvoiceDigestResponse xmlns="http://schemas.nav.gov.hu/OSA/3.0/api" xmlns:common="http://schemas.nav.gov.hu/NTCA/1.0/common" xmlns:base="http://schemas.nav.gov.hu/OSA/3.0/base">
+  <common:header>
+    <common:requestId>RIDTEST00000000000000000002</common:requestId>
+    <common:timestamp>2026-09-06T10:00:01.000Z</common:timestamp>
+    <common:requestVersion>3.0</common:requestVersion>
+    <common:headerVersion>1.0</common:headerVersion>
+  </common:header>
+  <common:result>
+    <common:funcCode>OK</common:funcCode>
+  </common:result>
+  <software>
+    <softwareId>CONTROLLERKIT00001</softwareId>
+    <softwareName>controller-claude-kit</softwareName>
+    <softwareOperation>LOCAL_SOFTWARE</softwareOperation>
+    <softwareMainVersion>0.1.0</softwareMainVersion>
+    <softwareDevName>controller-claude-kit</softwareDevName>
+    <softwareDevContact>n/a</softwareDevContact>
+  </software>
+  <invoiceDigestResult>
+    <currentPage>2</currentPage>
+    <availablePage>2</availablePage>
+    <invoiceDigest>
+      <invoiceNumber>SZLA-2026-4</invoiceNumber>
+      <invoiceOperation>MODIFY</invoiceOperation>
+      <invoiceCategory>NORMAL</invoiceCategory>
+      <invoiceIssueDate>2026-08-22</invoiceIssueDate>
+      <supplierTaxNumber>12345678</supplierTaxNumber>
+      <supplierName>Teszt IT Kft.</supplierName>
+      <customerTaxNumber>34567890</customerTaxNumber>
+      <customerName>Béta Bt.</customerName>
+      <paymentMethod>TRANSFER</paymentMethod>
+      <paymentDate>2026-09-06</paymentDate>
+      <invoiceAppearance>PAPER</invoiceAppearance>
+      <source>XML</source>
+      <invoiceDeliveryDate>2026-08-22</invoiceDeliveryDate>
+      <currency>HUF</currency>
+      <invoiceNetAmount>10000.00</invoiceNetAmount>
+      <invoiceNetAmountHUF>10000.00</invoiceNetAmountHUF>
+      <invoiceVatAmount>2700.00</invoiceVatAmount>
+      <invoiceVatAmountHUF>2700.00</invoiceVatAmountHUF>
+      <transactionId>TXN0000000000000004</transactionId>
+      <index>1</index>
+      <originalInvoiceNumber>SZLA-2026-3</originalInvoiceNumber>
+      <modificationIndex>1</modificationIndex>
+      <insDate>2026-08-22T08:30:00Z</insDate>
+      <completenessIndicator>false</completenessIndicator>
+    </invoiceDigest>
+    <invoiceDigest>
+      <invoiceNumber>E-SZLA-2026-1</invoiceNumber>
+      <invoiceOperation>CREATE</invoiceOperation>
+      <invoiceCategory>NORMAL</invoiceCategory>
+      <invoiceIssueDate>2026-08-12</invoiceIssueDate>
+      <supplierTaxNumber>12345678</supplierTaxNumber>
+      <supplierName>Teszt IT Kft.</supplierName>
+      <customerName>Gamma GmbH</customerName>
+      <paymentMethod>TRANSFER</paymentMethod>
+      <paymentDate>2026-09-11</paymentDate>
+      <invoiceAppearance>ELECTRONIC</invoiceAppearance>
+      <source>XML</source>
+      <invoiceDeliveryDate>2026-08-12</invoiceDeliveryDate>
+      <currency>EUR</currency>
+      <invoiceNetAmount>1000.00</invoiceNetAmount>
+      <invoiceNetAmountHUF>399500.00</invoiceNetAmountHUF>
+      <invoiceVatAmount>0.00</invoiceVatAmount>
+      <invoiceVatAmountHUF>0.00</invoiceVatAmountHUF>
+      <transactionId>TXN0000000000000005</transactionId>
+      <index>1</index>
+      <insDate>2026-08-12T14:45:00Z</insDate>
+      <completenessIndicator>false</completenessIndicator>
+    </invoiceDigest>
+    <invoiceDigest>
+      <invoiceNumber>SZLA-2026-5</invoiceNumber>
+      <invoiceOperation>CREATE</invoiceOperation>
+      <invoiceCategory>NORMAL</invoiceCategory>
+      <invoiceIssueDate>2026-08-28</invoiceIssueDate>
+      <supplierTaxNumber>12345678</supplierTaxNumber>
+      <supplierName>Teszt IT Kft.</supplierName>
+      <customerTaxNumber>45678901</customerTaxNumber>
+      <customerName>Digest Only Kft.</customerName>
+      <paymentMethod>TRANSFER</paymentMethod>
+      <paymentDate>2026-09-12</paymentDate>
+      <invoiceAppearance>PAPER</invoiceAppearance>
+      <source>XML</source>
+      <invoiceDeliveryDate>2026-08-28</invoiceDeliveryDate>
+      <currency>HUF</currency>
+      <invoiceNetAmount>30000.00</invoiceNetAmount>
+      <invoiceNetAmountHUF>30000.00</invoiceNetAmountHUF>
+      <invoiceVatAmount>8100.00</invoiceVatAmount>
+      <invoiceVatAmountHUF>8100.00</invoiceVatAmountHUF>
+      <transactionId>TXN0000000000000006</transactionId>
+      <index>1</index>
+      <insDate>2026-08-28T16:00:00Z</insDate>
+      <completenessIndicator>false</completenessIndicator>
+    </invoiceDigest>
+  </invoiceDigestResult>
+</QueryInvoiceDigestResponse>

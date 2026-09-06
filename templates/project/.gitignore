@@ -1,0 +1,22 @@
+# Adat és kimenet: soha nem kerül verziókezelésbe
+data/*
+!data/drops/
+data/drops/*
+!data/drops/.keep
+exports/*
+!exports/.keep
+*.xlsx
+*.csv
+*.pending.xlsx
+
+# Építés alatti és próbafuttatott fájlok
+_dryrun/
+.staging/
+
+# Python
+__pycache__/
+
+# Helyi Claude Code beállítás
+.claude/settings.local.json
+
+# A reports/<slug>/runlog.jsonl szándékosan verziózott: a futási előzmény a riport része.
