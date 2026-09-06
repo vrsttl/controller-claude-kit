@@ -30,9 +30,8 @@ uv run python tests/build_manifest.py --check
 ```
 
 `tests/check.sh` already wires in the parse check, the settings merge test and
-the manifest check. It does **not** call `tests/test_kit_common.ps1`; that hook
-does not exist in `check.sh` and `check.sh` is owned elsewhere, so add the step
-there when you touch that file next.
+the manifest check. It also calls `tests/test_kit_common.ps1` as step 6, so the
+sweep covers every test listed above.
 
 A `-WhatIf` smoke run also works on macOS, because every path join goes through
 `Join-KitPath` and `Get-KitUserProfile` falls back to `$HOME` when
@@ -122,8 +121,8 @@ Section specific rules:
 I added a `.gitattributes` at the repo root with `* -text`. Without it a Windows
 checkout with `core.autocrlf=true` rewrites every LF to CRLF, every sha256 stops
 matching, and the installer reports the entire kit as "she edited it" and backs
-up 50 files on the first run. This file is not in any phase's ownership list;
-flag it if you want it somewhere else.
+up 50 files on the first run. It is committed at the repo root by design with
+`* -text`, so Windows checkouts keep LF and the manifest hashes match.
 
 ## `settings.json` merge
 
